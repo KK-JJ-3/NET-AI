@@ -1,0 +1,211 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum UserRole {
+  admin
+  viewer
+  auditor
+
+  @@map("user_role")
+}
+
+enum DeviceType {
+  router
+  switch
+  firewall
+  access_point
+  server
+
+  @@map("device_type")
+}
+
+enum DeviceStatus {
+  up
+  degraded
+  down
+
+  @@map("device_status")
+}
+
+enum FaultType {
+  congestion
+  device_failure
+
+  @@map("fault_type")
+}
+
+enum FaultStatus {
+  predicted
+  confirmed
+  resolved
+
+  @@map("fault_status")
+}
+
+enum Severity {
+  low
+  medium
+  high
+  critical
+
+  @@map("severity")
+}
+
+enum ScenarioLabel {
+  normal
+  congestion
+  device_failure
+
+  @@map("scenario_label")
+}
+
+enum PredictionStatus {
+  pending
+  confirmed
+  false_positive
+
+  @@map("prediction_status")
+}
+
+enum PredictionOutcomeType {
+  confirmed
+  false_positive
+
+  @@map("prediction_outcome")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique @db.VarChar(64)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  role         UserRole
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("users")
+}
+
+model Device {
+  id        Int          @id @default(autoincrement())
+  name      String       @db.VarChar(100)
+  type      DeviceType
+  ipAddress String       @map("ip_address") @db.VarChar(45)
+  status    DeviceStatus @default(up)
+  location  String?      @db.VarChar(100)
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  interfaces  Interface[]
+  telemetry   Telemetry[]
+  faults      Fault[]
+  predictions Prediction[]
+  alerts      Alert[]
+
+  @@map("devices")
+}
+
+model Interface {
+  id       Int          @id @default(autoincrement())
+  deviceId Int          @map("device_id")
+  name     String       @db.VarChar(50)
+  status   DeviceStatus @default(up)
+
+  device    Device      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  telemetry Telemetry[]
+
+  @@map("interfaces")
+}
+
+model Telemetry {
+  id             BigInt        @id @default(autoincrement())
+  deviceId       Int           @map("device_id")
+  interfaceId    Int?          @map("interface_id")
+  recordedAt     DateTime      @map("recorded_at")
+  latencyMs      Float         @map("latency_ms")
+  packetLossPct  Float         @map("packet_loss_pct")
+  jitterMs       Float         @map("jitter_ms")
+  utilizationPct Float         @map("utilization_pct")
+  cpuPct         Float         @map("cpu_pct")
+  memoryPct      Float         @map("memory_pct")
+  availability   Boolean       @default(true)
+  scenarioLabel  ScenarioLabel @map("scenario_label")
+
+  device    Device     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  interface Interface? @relation(fields: [interfaceId], references: [id], onDelete: SetNull)
+
+  @@index([deviceId, recordedAt])
+  @@map("telemetry")
+}
+
+model Fault {
+  id         Int         @id @default(autoincrement())
+  deviceId   Int         @map("device_id")
+  faultType  FaultType   @map("fault_type")
+  status     FaultStatus
+  severity   Severity
+  startedAt  DateTime    @map("started_at")
+  resolvedAt DateTime?   @map("resolved_at")
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  device      Device             @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  predictions PredictionOutcome[]
+
+  @@map("faults")
+}
+
+model Prediction {
+  id                    Int              @id @default(autoincrement())
+  deviceId              Int              @map("device_id")
+  faultType             FaultType        @map("fault_type")
+  riskScore             Float            @map("risk_score")
+  severity              Severity
+  predictedWindowMinutes Int             @map("predicted_window_minutes")
+  explanationText       String           @map("explanation_text") @db.Text
+  contributingFeatures  Json             @map("contributing_features")
+  status                PredictionStatus @default(pending)
+  predictedAt           DateTime         @default(now()) @map("predicted_at")
+
+  device           Device              @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  outcomes         PredictionOutcome[]
+  alerts           Alert[]
+
+  @@map("predictions")
+}
+
+model PredictionOutcome {
+  id           Int                  @id @default(autoincrement())
+  predictionId Int                  @map("prediction_id")
+  faultId      Int?                 @map("fault_id")
+  outcome      PredictionOutcomeType
+  evaluatedAt  DateTime             @default(now()) @map("evaluated_at")
+  notes        String?              @db.VarChar(255)
+
+  prediction Prediction @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+  fault      Fault?     @relation(fields: [faultId], references: [id], onDelete: SetNull)
+
+  @@map("prediction_outcomes")
+}
+
+model Alert {
+  id           Int      @id @default(autoincrement())
+  predictionId Int?     @map("prediction_id")
+  deviceId     Int      @map("device_id")
+  message      String   @db.VarChar(255)
+  severity     Severity
+  acknowledged Boolean  @default(false)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  prediction Prediction? @relation(fields: [predictionId], references: [id], onDelete: SetNull)
+  device     Device      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("alerts")
+}
