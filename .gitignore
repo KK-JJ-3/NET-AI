@@ -1,0 +1,233 @@
+# ============================================================
+# NetFault AI - Root Git Ignore
+# ============================================================
+
+# ------------------------------------------------------------
+# Dependencies
+# ------------------------------------------------------------
+
+node_modules/
+**/node_modules/
+
+# ------------------------------------------------------------
+# Environment / Secrets
+# ------------------------------------------------------------
+
+.env
+.env.*
+!.env.example
+!.env.example.*
+
+# ------------------------------------------------------------
+# Build / Distribution
+# ------------------------------------------------------------
+
+dist/
+**/dist/
+
+build/
+**/build/
+
+out/
+**/out/
+
+coverage/
+**/coverage/
+
+.vite/
+**/.vite/
+
+.cache/
+**/.cache/
+
+# ------------------------------------------------------------
+# Logs
+# ------------------------------------------------------------
+
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ------------------------------------------------------------
+# TypeScript
+# ------------------------------------------------------------
+
+*.tsbuildinfo
+
+# ------------------------------------------------------------
+# Prisma
+# ------------------------------------------------------------
+
+# Prisma-generated agent/IDE skills
+backend/.agents/
+backend/.claude/
+backend/.windsurf/
+
+# Prisma generated client
+# Keep this ignored because it can be regenerated with:
+# npx prisma generate
+backend/src/generated/
+
+# ------------------------------------------------------------
+# Python / AI Service
+# ------------------------------------------------------------
+
+# Python cache
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python packaging
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Test / coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ------------------------------------------------------------
+# AI / ML Generated Files
+# ------------------------------------------------------------
+
+# Model files - usually too large for Git
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.h5
+*.hdf5
+*.joblib
+*.pkl
+*.pickle
+*.safetensors
+*.bin
+
+# Local datasets
+*.csv
+*.parquet
+*.feather
+*.npy
+*.npz
+
+# Local experiment output
+experiments/output/
+experiments/results/
+models/
+checkpoints/
+artifacts/
+
+# ------------------------------------------------------------
+# Temporary / Generated Data
+# ------------------------------------------------------------
+
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Network simulator generated data
+simulator/output/
+simulator/data/
+simulator/logs/
+
+# ------------------------------------------------------------
+# IDE / Editors
+# ------------------------------------------------------------
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ------------------------------------------------------------
+# Operating System
+# ------------------------------------------------------------
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# ------------------------------------------------------------
+# Frontend specific
+# ------------------------------------------------------------
+
+frontend/.vite/
+frontend/dist/
+frontend/build/
+frontend/coverage/
+
+# ------------------------------------------------------------
+# Backend specific
+# ------------------------------------------------------------
+
+backend/dist/
+backend/build/
+backend/coverage/
+
+# ------------------------------------------------------------
+# Local development files
+# ------------------------------------------------------------
+
+*.local
+*.local.*
+!.env.example
+!.env.example.*
+
+# ------------------------------------------------------------
+# Docker local overrides
+# ------------------------------------------------------------
+
+docker-compose.override.yml
+docker-compose.local.yml
+
+# ------------------------------------------------------------
+# Database local files
+# ------------------------------------------------------------
+
+*.sqlite
+*.sqlite3
+*.db
+
+# ------------------------------------------------------------
+# Generated documentation / reports
+# ------------------------------------------------------------
+
+reports/generated/
+docs/generated/
+
+# ------------------------------------------------------------
+# OS / temporary archives
+# ------------------------------------------------------------
+
+*.bak
+*.backup
+*.old
+*.origgit restore --staged .
