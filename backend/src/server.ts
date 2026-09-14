@@ -5,11 +5,16 @@ import helmet from "helmet";
 import morgan from "morgan";
 
 import prisma from "./config/database.js";
+import { sendSuccess, sendError } from "./utils/apiResponse.js";
+import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
+import deviceRoutes from "./routes/deviceRoutes.js";
+import telemetryRoutes from "./routes/telemetryRoutes.js";
 
 dotenv.config();
+import { env } from "./config/env.js";
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = env.port;
 
 // Middleware
 app.use(helmet());
@@ -19,20 +24,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
 // Root
-app.get("/", (req, res) => {
-  res.status(200).json({
-    success: true,
+app.get("/", (_req, res) => {
+  return sendSuccess(res, {
     message: "Welcome to NetFault AI API",
   });
 });
 
 // Health check
-app.get("/api/health", async (req, res) => {
+app.get("/api/health", async (_req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
 
-    res.status(200).json({
-      success: true,
+    return sendSuccess(res, {
       server: "ok",
       database: "connected",
       timestamp: new Date().toISOString(),
@@ -40,13 +43,20 @@ app.get("/api/health", async (req, res) => {
   } catch (error) {
     console.error("Database health check failed:", error);
 
-    res.status(503).json({
-      success: false,
-      server: "ok",
-      database: "disconnected",
-    });
+    return sendError(res, "Database connection failed", 503);
   }
 });
+// Device routes
+app.use("/api/devices", deviceRoutes);
+
+// Telemetry routes
+app.use("/api/telemetry", telemetryRoutes);
+
+// 404 handler
+app.use(notFoundHandler);
+
+// Global error handler
+app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
