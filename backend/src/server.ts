@@ -10,6 +10,10 @@ import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 import deviceRoutes from "./routes/deviceRoutes.js";
 import telemetryRoutes from "./routes/telemetryRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import predictionRoutes from "./routes/predictionRoutes.js";
+import faultRoutes from "./routes/faultRoutes.js";
+import alertRoutes from "./routes/alertRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 dotenv.config();
 import { env } from "./config/env.js";
@@ -56,6 +60,18 @@ app.use("/api/devices", deviceRoutes);
 
 // Telemetry routes
 app.use("/api/telemetry", telemetryRoutes);
+
+// Prediction routes
+app.use("/api/predictions", predictionRoutes);
+
+// Fault routes
+app.use("/api/faults", faultRoutes);
+
+// Alert routes
+app.use("/api/alerts", alertRoutes);
+
+// Dashboard routes
+app.use("/api/dashboard", dashboardRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
