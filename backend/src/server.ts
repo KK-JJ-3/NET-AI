@@ -9,6 +9,7 @@ import { sendSuccess, sendError } from "./utils/apiResponse.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 import deviceRoutes from "./routes/deviceRoutes.js";
 import telemetryRoutes from "./routes/telemetryRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
 import { env } from "./config/env.js";
@@ -46,6 +47,10 @@ app.get("/api/health", async (_req, res) => {
     return sendError(res, "Database connection failed", 503);
   }
 });
+
+// Auth routes
+app.use("/api/auth", authRoutes);
+
 // Device routes
 app.use("/api/devices", deviceRoutes);
 

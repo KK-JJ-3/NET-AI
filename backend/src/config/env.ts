@@ -14,6 +14,8 @@ export const env = {
   port: Number(process.env.PORT) || 5000,
   nodeEnv: process.env.NODE_ENV || "development",
 
+  jwtSecret: requireEnv("JWT_SECRET"),
+
   database: {
     host: requireEnv("DB_HOST"),
     port: Number(process.env.DB_PORT) || 3306,

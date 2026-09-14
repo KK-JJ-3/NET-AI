@@ -1,4 +1,5 @@
 import "dotenv/config";
+import bcrypt from "bcrypt";
 
 import { PrismaClient } from "../src/generated/prisma/client.js";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
@@ -14,6 +15,24 @@ const adapter = new PrismaMariaDb({
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  const passwordHash = await bcrypt.hash("admin123", 12);
+
+  await prisma.user.upsert({
+    where: {
+      username: "admin",
+    },
+    update: {
+      passwordHash,
+      role: "admin",
+    },
+    create: {
+      username: "admin",
+      passwordHash,
+      role: "admin",
+    },
+  });
+
+  console.log("Seeded admin user: admin");
   const devices = [
     {
       name: "Core-Router-01",
