@@ -1,0 +1,503 @@
+/* =========================================================
+   NETFAULT AI
+   UI COMPATIBILITY / ACCESSIBILITY LAYER
+   ---------------------------------------------------------
+   App.css owns the actual layout.
+   This file only supports .nf-* helper classes and
+   accessibility compatibility.
+   ========================================================= */
+
+/* =========================================================
+   NETFAULT TOKENS
+   ========================================================= */
+
+:root {
+  --nf-bg: var(--bg);
+  --nf-surface: var(--panel);
+  --nf-surface-2: var(--panel-2);
+
+  --nf-line: var(--border);
+  --nf-line-strong: var(--border-strong);
+
+  --nf-text: var(--text);
+  --nf-text-muted: var(--muted);
+  --nf-text-faint: var(--muted-2);
+
+  --nf-brand: var(--lime);
+  --nf-brand-ink: #000;
+
+  --nf-ok: var(--success);
+  --nf-warn: var(--warning);
+  --nf-crit: var(--danger);
+
+  --nf-shadow: var(--shadow);
+}
+
+/* =========================================================
+   GENERIC .NF LABEL
+   ========================================================= */
+
+.nf-label {
+  color: var(--nf-text-muted);
+
+  font-size: 13px;
+  font-weight: 800;
+
+  letter-spacing: 0.04em;
+}
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.nf-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  font-size: 12px;
+  font-weight: 850;
+
+  text-transform: uppercase;
+}
+
+.nf-status--ok {
+  color: var(--nf-ok);
+}
+
+.nf-status--warn {
+  color: var(--nf-warn);
+}
+
+.nf-status--crit {
+  color: var(--nf-crit);
+}
+
+/* =========================================================
+   LIVE INDICATOR
+   Visual activity only — not WebSocket status.
+   ========================================================= */
+
+.nf-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  color: var(--nf-text);
+
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.nf-live__dot {
+  width: 8px;
+  height: 8px;
+
+  flex: 0 0 8px;
+
+  background: var(--nf-ok);
+}
+
+.nf-live[data-state="connected"] .nf-live__dot {
+  animation: nfPulse 1.8s ease-in-out infinite;
+}
+
+.nf-live[data-state="reconnecting"] .nf-live__dot {
+  background: var(--nf-warn);
+}
+
+.nf-live[data-state="offline"] .nf-live__dot {
+  background: var(--nf-crit);
+}
+
+@keyframes nfPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(0.82);
+  }
+
+  50% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+}
+
+/* =========================================================
+   NF FILTERS
+   ========================================================= */
+
+.nf-chips {
+  flex-shrink: 0;
+
+  position: relative;
+  z-index: 5;
+
+  margin-bottom: 20px;
+}
+
+.nf-chip {
+  cursor: pointer;
+}
+
+.nf-chip[data-empty="true"]:not([aria-pressed="true"]) {
+  color: #9ca3af;
+
+  background: #141414;
+
+  border-color: #3b3b3b;
+
+  border-style: dashed;
+}
+
+/* =========================================================
+   NF CARD
+   ========================================================= */
+
+.nf-card {
+  background: var(--nf-surface);
+
+  border: 2px solid var(--nf-line);
+
+  box-shadow: var(--nf-shadow);
+}
+
+.nf-card--interactive {
+  display: block;
+
+  color: inherit;
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    border-color 140ms ease;
+}
+
+.nf-card--interactive:hover {
+  transform: translate(-3px, -3px);
+
+  border-color: var(--nf-line-strong);
+
+  box-shadow: var(--shadow-large);
+}
+
+.nf-card--interactive:active {
+  transform: translate(2px, 2px);
+
+  box-shadow: 2px 2px 0 #000;
+}
+
+/* =========================================================
+   NF DEVICE GRID
+   ========================================================= */
+
+.nf-device-grid {
+  display: grid;
+
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+
+  gap: 18px;
+
+  overflow: visible;
+}
+
+/* =========================================================
+   NF DETAIL GRID
+   ========================================================= */
+
+.nf-detail-grid {
+  display: grid;
+
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+
+  gap: 18px;
+
+  align-items: start;
+}
+
+/* =========================================================
+   NF DEFINITION LIST
+   ========================================================= */
+
+.nf-dl {
+  display: grid;
+
+  grid-template-columns:
+    max-content
+    minmax(0, 1fr);
+
+  gap: 16px 28px;
+
+  margin: 20px 0 0;
+}
+
+.nf-dl dt {
+  color: var(--nf-text-muted);
+
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.nf-dl dd {
+  margin: 0;
+
+  color: var(--nf-text);
+
+  font-size: 14px;
+}
+
+.nf-mono {
+  font-family: ui-monospace, "JetBrains Mono", Consolas, monospace;
+}
+
+/* =========================================================
+   NF COPY BUTTON
+   ========================================================= */
+
+.nf-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nf-copy button {
+  width: 30px;
+  height: 30px;
+
+  display: grid;
+  place-items: center;
+
+  color: var(--nf-text-muted);
+
+  background: transparent;
+
+  border: 1px solid var(--nf-line);
+
+  cursor: pointer;
+}
+
+.nf-copy button:hover {
+  color: #000;
+
+  background: var(--nf-brand);
+
+  border-color: var(--nf-brand);
+}
+
+/* =========================================================
+   NF EMPTY STATE
+   ========================================================= */
+
+.nf-empty {
+  display: grid;
+
+  justify-items: center;
+
+  gap: 10px;
+
+  padding: 40px 22px;
+
+  border: 2px dashed var(--nf-line);
+
+  color: var(--nf-text-muted);
+
+  text-align: center;
+}
+
+.nf-empty h3 {
+  margin: 0;
+
+  color: var(--nf-text);
+
+  font-size: 18px;
+}
+
+.nf-empty p {
+  max-width: 54ch;
+
+  margin: 0;
+
+  color: var(--nf-text-muted);
+
+  font-size: 13px;
+}
+
+.nf-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  margin-top: 8px;
+}
+
+/* =========================================================
+   NF BUTTON
+   ========================================================= */
+
+.nf-btn {
+  min-height: 42px;
+
+  padding: 0 16px;
+
+  color: #000;
+
+  background: var(--nf-brand);
+
+  border: 2px solid var(--nf-line-strong);
+
+  box-shadow: var(--shadow-small);
+
+  font-size: 13px;
+  font-weight: 850;
+
+  cursor: pointer;
+
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.nf-btn:hover {
+  transform: translate(-2px, -2px);
+
+  box-shadow: var(--shadow);
+}
+
+.nf-btn:active {
+  transform: translate(2px, 2px);
+
+  box-shadow: 2px 2px 0 #000;
+}
+
+/* =========================================================
+   NF FORM COMPATIBILITY
+   ========================================================= */
+
+.nf-field {
+  display: grid;
+
+  gap: 0;
+
+  margin-bottom: 20px;
+}
+
+.nf-field label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: var(--nf-text);
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.nf-field input {
+  width: 100%;
+  min-height: 52px;
+
+  padding: 0 14px;
+
+  color: var(--nf-text);
+
+  background: var(--nf-bg);
+
+  border: 2px solid var(--nf-line);
+
+  outline: none;
+}
+
+.nf-field input:focus {
+  border-color: var(--nf-brand);
+
+  box-shadow: var(--shadow-small);
+}
+
+.nf-field input[aria-invalid="true"] {
+  border-color: var(--nf-crit);
+}
+
+.nf-field input::placeholder {
+  color: var(--nf-text-faint);
+}
+
+.nf-password {
+  position: relative;
+}
+
+.nf-password input {
+  padding-right: 52px;
+}
+
+.nf-password button {
+  position: absolute;
+
+  top: 0;
+  right: 0;
+  bottom: 0;
+
+  width: 48px;
+
+  display: grid;
+  place-items: center;
+
+  color: var(--nf-text-muted);
+
+  background: transparent;
+
+  border: 0;
+
+  cursor: pointer;
+}
+
+.nf-password button:hover {
+  color: var(--nf-brand);
+}
+
+.nf-error {
+  color: var(--nf-crit);
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   SCREEN READER UTILITY
+   ========================================================= */
+
+.sr-only {
+  position: absolute;
+
+  width: 1px;
+  height: 1px;
+
+  padding: 0;
+  margin: -1px;
+
+  overflow: hidden;
+
+  clip: rect(0, 0, 0, 0);
+
+  white-space: nowrap;
+
+  border: 0;
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
