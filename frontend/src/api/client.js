@@ -57,3 +57,10 @@ export async function getDevices() {
 export function logout() {
   localStorage.removeItem("netfault_token");
 }
+export async function getDevice(id) {
+  return request(`/devices/${id}`);
+}
+
+export async function getDeviceTelemetry(id, range = "1h") {
+  return request(`/devices/${id}/telemetry?range=${range}`);
+}
