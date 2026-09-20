@@ -10,8 +10,11 @@ import {
   predictionQuerySchema,
   predictionIdSchema,
 } from "../validation/predictionSchema.js";
+import { authenticate } from "../middleware/auth.js";
 
 const router = Router();
+
+router.use(authenticate);
 
 router.get("/", validate(predictionQuerySchema), getPredictions);
 
