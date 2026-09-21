@@ -1,6 +1,14 @@
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { getDevice, getDeviceTelemetry } from "../api/client";
 
 import {
@@ -64,7 +72,7 @@ function DeviceDetails({ deviceId, onBack }) {
         const data = await getDeviceTelemetry(deviceId, range);
 
         if (mounted) {
-          setTelemetry(Array.isArray(data) ? data : []);
+          setTelemetry(Array.isArray(data?.telemetry) ? data.telemetry : []);
         }
       } catch {
         if (mounted) {
@@ -103,6 +111,38 @@ function DeviceDetails({ deviceId, onBack }) {
 
     return formatWhen(timestamp);
   }, [telemetry]);
+
+  const chartData = useMemo(() => {
+    return telemetry
+      .map((item) => {
+        const timestamp = item?.recordedAt;
+
+        if (!timestamp) {
+          return null;
+        }
+
+        const date = new Date(timestamp);
+
+        if (Number.isNaN(date.getTime())) {
+          return null;
+        }
+
+        return {
+          time: date.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          latency: Number(item.latencyMs ?? 0),
+          packetLoss: Number(item.packetLossPct ?? 0),
+          jitter: Number(item.jitterMs ?? 0),
+          utilization: Number(item.utilizationPct ?? 0),
+          cpu: Number(item.cpuPct ?? 0),
+          memory: Number(item.memoryPct ?? 0),
+        };
+      })
+      .filter(Boolean);
+  }, [telemetry]);
+  const latestTelemetry = telemetry[telemetry.length - 1] ?? null;
 
   if (loading) {
     return (
@@ -276,13 +316,424 @@ function DeviceDetails({ deviceId, onBack }) {
             </div>
           ) : telemetry.length === 0 ? (
             <TelemetryEmpty range={range} />
+          ) : chartData.length === 0 ? (
+            <TelemetryEmpty range={range} />
           ) : (
-            <pre className="telemetry-json">
-              {JSON.stringify(telemetry, null, 2)}
-            </pre>
+            <>
+              {/* NETWORK SUMMARY */}
+              <div className="telemetry-metric-grid">
+                <TelemetryMetric
+                  label="Latency"
+                  value={latestTelemetry?.latencyMs}
+                  unit="ms"
+                  tone="latency"
+                />
+
+                <TelemetryMetric
+                  label="Packet Loss"
+                  value={latestTelemetry?.packetLossPct}
+                  unit="%"
+                  tone="packet-loss"
+                />
+
+                <TelemetryMetric
+                  label="Jitter"
+                  value={latestTelemetry?.jitterMs}
+                  unit="ms"
+                  tone="jitter"
+                />
+              </div>
+
+              {/* NETWORK PERFORMANCE */}
+              <section className="telemetry-chart-panel">
+                <div className="telemetry-chart-heading">
+                  <div>
+                    <span className="panel-kicker">Network performance</span>
+
+                    <h3>Latency, packet loss and jitter</h3>
+                  </div>
+
+                  <div className="telemetry-legend">
+                    <TelemetryLegend color="#3b82f6" label="Latency" />
+                    <TelemetryLegend color="#ef4444" label="Packet Loss" />
+                    <TelemetryLegend color="#f59e0b" label="Jitter" />
+                  </div>
+                </div>
+
+                <div className="telemetry-chart">
+                  <ResponsiveContainer width="100%" height={360}>
+                    <LineChart
+                      data={chartData}
+                      margin={{
+                        top: 12,
+                        right: 18,
+                        left: 8,
+                        bottom: 8,
+                      }}
+                    >
+                      <CartesianGrid
+                        stroke="#303030"
+                        strokeDasharray="3 3"
+                        vertical={false}
+                      />
+
+                      <XAxis
+                        dataKey="time"
+                        stroke="#777"
+                        tick={{ fill: "#999", fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={{ stroke: "#444" }}
+                      />
+
+                      <YAxis
+                        yAxisId="ms"
+                        stroke="#3b82f6"
+                        tick={{ fill: "#999", fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                        width={45}
+                        label={{
+                          value: "ms",
+                          angle: -90,
+                          position: "insideLeft",
+                          fill: "#3b82f6",
+                          fontSize: 11,
+                        }}
+                      />
+
+                      <YAxis
+                        yAxisId="percent"
+                        orientation="right"
+                        domain={[0, 100]}
+                        stroke="#ef4444"
+                        tick={{ fill: "#999", fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                        width={45}
+                        label={{
+                          value: "%",
+                          angle: 90,
+                          position: "insideRight",
+                          fill: "#ef4444",
+                          fontSize: 11,
+                        }}
+                      />
+
+                      <Tooltip content={<TelemetryTooltip />} />
+
+                      <Line
+                        yAxisId="ms"
+                        type="monotone"
+                        dataKey="latency"
+                        name="Latency"
+                        stroke="#3b82f6"
+                        strokeWidth={3}
+                        dot={{
+                          r: 3,
+                          fill: "#3b82f6",
+                          stroke: "#111",
+                          strokeWidth: 2,
+                        }}
+                        activeDot={{
+                          r: 5,
+                          fill: "#3b82f6",
+                        }}
+                      />
+
+                      <Line
+                        yAxisId="percent"
+                        type="monotone"
+                        dataKey="packetLoss"
+                        name="Packet Loss"
+                        stroke="#ef4444"
+                        strokeWidth={3}
+                        dot={{
+                          r: 3,
+                          fill: "#ef4444",
+                          stroke: "#111",
+                          strokeWidth: 2,
+                        }}
+                        activeDot={{
+                          r: 5,
+                          fill: "#ef4444",
+                        }}
+                      />
+
+                      <Line
+                        yAxisId="ms"
+                        type="monotone"
+                        dataKey="jitter"
+                        name="Jitter"
+                        stroke="#f59e0b"
+                        strokeWidth={3}
+                        dot={{
+                          r: 3,
+                          fill: "#f59e0b",
+                          stroke: "#111",
+                          strokeWidth: 2,
+                        }}
+                        activeDot={{
+                          r: 5,
+                          fill: "#f59e0b",
+                        }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
+
+              {/* RESOURCE SUMMARY */}
+              <div className="telemetry-resource-grid">
+                <TelemetryMetric
+                  label="Utilization"
+                  value={latestTelemetry?.utilizationPct}
+                  unit="%"
+                  tone="utilization"
+                />
+
+                <TelemetryMetric
+                  label="CPU Usage"
+                  value={latestTelemetry?.cpuPct}
+                  unit="%"
+                  tone="cpu"
+                />
+
+                <TelemetryMetric
+                  label="Memory Usage"
+                  value={latestTelemetry?.memoryPct}
+                  unit="%"
+                  tone="memory"
+                />
+
+                <TelemetryMetric
+                  label="Availability"
+                  value={latestTelemetry?.availability ? "Up" : "Down"}
+                  tone={
+                    latestTelemetry?.availability
+                      ? "availability-up"
+                      : "availability-down"
+                  }
+                />
+              </div>
+
+              {/* RESOURCE CHART */}
+              <section className="telemetry-chart-panel">
+                <div className="telemetry-chart-heading">
+                  <div>
+                    <span className="panel-kicker">Resource health</span>
+
+                    <h3>Utilization, CPU and memory</h3>
+                  </div>
+
+                  <div className="telemetry-legend">
+                    <TelemetryLegend color="#a855f7" label="Utilization" />
+                    <TelemetryLegend color="#14b8a6" label="CPU" />
+                    <TelemetryLegend color="#ec4899" label="Memory" />
+                  </div>
+                </div>
+
+                <div className="telemetry-chart">
+                  <ResponsiveContainer width="100%" height={320}>
+                    <LineChart
+                      data={chartData}
+                      margin={{
+                        top: 12,
+                        right: 18,
+                        left: 8,
+                        bottom: 8,
+                      }}
+                    >
+                      <CartesianGrid
+                        stroke="#303030"
+                        strokeDasharray="3 3"
+                        vertical={false}
+                      />
+
+                      <XAxis
+                        dataKey="time"
+                        stroke="#777"
+                        tick={{ fill: "#999", fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={{ stroke: "#444" }}
+                      />
+
+                      <YAxis
+                        domain={[0, 100]}
+                        tick={{ fill: "#999", fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                        width={45}
+                        tickFormatter={(value) => `${value}%`}
+                      />
+
+                      <Tooltip content={<ResourceTooltip />} />
+
+                      <Line
+                        type="monotone"
+                        dataKey="utilization"
+                        name="Utilization"
+                        stroke="#a855f7"
+                        strokeWidth={3}
+                        dot={{
+                          r: 3,
+                          fill: "#a855f7",
+                          stroke: "#111",
+                          strokeWidth: 2,
+                        }}
+                      />
+
+                      <Line
+                        type="monotone"
+                        dataKey="cpu"
+                        name="CPU"
+                        stroke="#14b8a6"
+                        strokeWidth={3}
+                        dot={{
+                          r: 3,
+                          fill: "#14b8a6",
+                          stroke: "#111",
+                          strokeWidth: 2,
+                        }}
+                      />
+
+                      <Line
+                        type="monotone"
+                        dataKey="memory"
+                        name="Memory"
+                        stroke="#ec4899"
+                        strokeWidth={3}
+                        dot={{
+                          r: 3,
+                          fill: "#ec4899",
+                          stroke: "#111",
+                          strokeWidth: 2,
+                        }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
+            </>
           )}
         </div>
       </section>
+    </div>
+  );
+}
+
+function TelemetryMetric({ label, value, unit = "", tone }) {
+  const displayValue =
+    typeof value === "number"
+      ? Number.isInteger(value)
+        ? value
+        : value.toFixed(1)
+      : (value ?? "—");
+
+  return (
+    <div className={`telemetry-metric-card telemetry-metric-${tone}`}>
+      <div className="telemetry-metric-indicator" />
+
+      <div className="telemetry-metric-content">
+        <span>{label}</span>
+
+        <strong>
+          {displayValue}
+          {unit && <small>{unit}</small>}
+        </strong>
+      </div>
+    </div>
+  );
+}
+
+function TelemetryLegend({ color, label }) {
+  return (
+    <span className="telemetry-legend-item">
+      <i style={{ background: color }} />
+      {label}
+    </span>
+  );
+}
+
+function TelemetryTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  const values = {
+    latency: payload.find((item) => item.dataKey === "latency")?.value,
+    packetLoss: payload.find((item) => item.dataKey === "packetLoss")?.value,
+    jitter: payload.find((item) => item.dataKey === "jitter")?.value,
+  };
+
+  return (
+    <div className="telemetry-tooltip">
+      <strong>{label}</strong>
+
+      <div className="telemetry-tooltip-row">
+        <span>
+          <i className="tooltip-dot latency-dot" />
+          Latency
+        </span>
+        <b>{values.latency ?? "—"} ms</b>
+      </div>
+
+      <div className="telemetry-tooltip-row">
+        <span>
+          <i className="tooltip-dot packet-loss-dot" />
+          Packet Loss
+        </span>
+        <b>{values.packetLoss ?? "—"}%</b>
+      </div>
+
+      <div className="telemetry-tooltip-row">
+        <span>
+          <i className="tooltip-dot jitter-dot" />
+          Jitter
+        </span>
+        <b>{values.jitter ?? "—"} ms</b>
+      </div>
+    </div>
+  );
+}
+
+function ResourceTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  const values = {
+    utilization: payload.find((item) => item.dataKey === "utilization")?.value,
+    cpu: payload.find((item) => item.dataKey === "cpu")?.value,
+    memory: payload.find((item) => item.dataKey === "memory")?.value,
+  };
+
+  return (
+    <div className="telemetry-tooltip">
+      <strong>{label}</strong>
+
+      <div className="telemetry-tooltip-row">
+        <span>
+          <i className="tooltip-dot utilization-dot" />
+          Utilization
+        </span>
+        <b>{values.utilization ?? "—"}%</b>
+      </div>
+
+      <div className="telemetry-tooltip-row">
+        <span>
+          <i className="tooltip-dot cpu-dot" />
+          CPU
+        </span>
+        <b>{values.cpu ?? "—"}%</b>
+      </div>
+
+      <div className="telemetry-tooltip-row">
+        <span>
+          <i className="tooltip-dot memory-dot" />
+          Memory
+        </span>
+        <b>{values.memory ?? "—"}%</b>
+      </div>
     </div>
   );
 }
