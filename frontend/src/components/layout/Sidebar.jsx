@@ -15,7 +15,7 @@ const navigation = [
     id: "dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
-    available: false,
+    available: true,
   },
   {
     id: "devices",

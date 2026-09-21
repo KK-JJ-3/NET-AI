@@ -64,3 +64,14 @@ export async function getDevice(id) {
 export async function getDeviceTelemetry(id, range = "1h") {
   return request(`/devices/${id}/telemetry?range=${range}`);
 }
+export async function getPredictions() {
+  return request("/predictions");
+}
+
+export async function getFaults() {
+  return request("/faults");
+}
+
+export async function getAlerts() {
+  return request("/alerts");
+}
