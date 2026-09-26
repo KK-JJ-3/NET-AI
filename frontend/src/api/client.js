@@ -64,6 +64,51 @@ export async function getDevice(id) {
 export async function getDeviceTelemetry(id, range = "1h") {
   return request(`/devices/${id}/telemetry?range=${range}`);
 }
+
+export async function createDevice(deviceData) {
+  return request("/devices", {
+    method: "POST",
+    body: JSON.stringify(deviceData),
+  });
+}
+
+export async function updateDevice(id, deviceData) {
+  return request(`/devices/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(deviceData),
+  });
+}
+
+export async function deleteDevice(id) {
+  return request(`/devices/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getDeviceInterfaces(deviceId) {
+  return request(`/interfaces/device/${deviceId}`);
+}
+
+export async function createInterface(deviceId, interfaceData) {
+  return request(`/interfaces/device/${deviceId}`, {
+    method: "POST",
+    body: JSON.stringify(interfaceData),
+  });
+}
+
+export async function updateInterface(id, interfaceData) {
+  return request(`/interfaces/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(interfaceData),
+  });
+}
+
+export async function deleteInterface(id) {
+  return request(`/interfaces/${id}`, {
+    method: "DELETE",
+  });
+}
+
 export async function getPredictions(filters = {}) {
   const params = new URLSearchParams();
 

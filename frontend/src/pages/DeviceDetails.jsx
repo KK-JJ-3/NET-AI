@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   CartesianGrid,
@@ -9,7 +9,15 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { getDevice, getDeviceTelemetry } from "../api/client";
+
+import {
+  createInterface,
+  deleteInterface,
+  getDevice,
+  getDeviceInterfaces,
+  getDeviceTelemetry,
+  updateInterface,
+} from "../api/client";
 
 import {
   Breadcrumb,
@@ -20,16 +28,35 @@ import {
   formatWhen,
 } from "../components/ui/NetworkUI";
 
+import "../styles/devices.css";
+
 function DeviceDetails({ deviceId, onBack }) {
   const [device, setDevice] = useState(null);
   const [telemetry, setTelemetry] = useState([]);
+  const [interfaces, setInterfaces] = useState([]);
 
   const [range, setRange] = useState("1h");
 
   const [loading, setLoading] = useState(true);
   const [telemetryLoading, setTelemetryLoading] = useState(false);
+  const [interfacesLoading, setInterfacesLoading] = useState(false);
 
   const [error, setError] = useState("");
+  const [interfaceError, setInterfaceError] = useState("");
+
+  const [showAddInterface, setShowAddInterface] = useState(false);
+  const [showEditInterface, setShowEditInterface] = useState(false);
+  const [showDeleteInterface, setShowDeleteInterface] = useState(false);
+
+  const [selectedInterface, setSelectedInterface] = useState(null);
+
+  const [interfaceForm, setInterfaceForm] = useState({
+    name: "",
+    status: "up",
+  });
+
+  const [interfaceSubmitting, setInterfaceSubmitting] = useState(false);
+  const [interfaceDeleting, setInterfaceDeleting] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -56,6 +83,54 @@ function DeviceDetails({ deviceId, onBack }) {
     }
 
     loadDevice();
+
+    return () => {
+      mounted = false;
+    };
+  }, [deviceId]);
+
+  async function loadInterfaces() {
+    try {
+      setInterfacesLoading(true);
+      setInterfaceError("");
+
+      const data = await getDeviceInterfaces(deviceId);
+
+      setInterfaces(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setInterfaces([]);
+      setInterfaceError(err?.message || "Failed to load interfaces");
+    } finally {
+      setInterfacesLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadDeviceInterfaces() {
+      try {
+        setInterfacesLoading(true);
+        setInterfaceError("");
+
+        const data = await getDeviceInterfaces(deviceId);
+
+        if (mounted) {
+          setInterfaces(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        if (mounted) {
+          setInterfaces([]);
+          setInterfaceError(err?.message || "Failed to load interfaces");
+        }
+      } finally {
+        if (mounted) {
+          setInterfacesLoading(false);
+        }
+      }
+    }
+
+    loadDeviceInterfaces();
 
     return () => {
       mounted = false;
@@ -142,7 +217,172 @@ function DeviceDetails({ deviceId, onBack }) {
       })
       .filter(Boolean);
   }, [telemetry]);
+
   const latestTelemetry = telemetry[telemetry.length - 1] ?? null;
+
+  function openAddInterface() {
+    setInterfaceForm({
+      name: "",
+      status: "up",
+    });
+
+    setInterfaceError("");
+    setShowAddInterface(true);
+  }
+
+  function closeAddInterface() {
+    if (interfaceSubmitting) {
+      return;
+    }
+
+    setShowAddInterface(false);
+    setInterfaceForm({
+      name: "",
+      status: "up",
+    });
+  }
+
+  function openEditInterface(interfaceRecord) {
+    setSelectedInterface(interfaceRecord);
+
+    setInterfaceForm({
+      name: interfaceRecord.name || "",
+      status: interfaceRecord.status || "up",
+    });
+
+    setInterfaceError("");
+    setShowEditInterface(true);
+  }
+
+  function closeEditInterface() {
+    if (interfaceSubmitting) {
+      return;
+    }
+
+    setShowEditInterface(false);
+    setSelectedInterface(null);
+    setInterfaceForm({
+      name: "",
+      status: "up",
+    });
+  }
+
+  function openDeleteInterface(interfaceRecord) {
+    setSelectedInterface(interfaceRecord);
+    setInterfaceError("");
+    setShowDeleteInterface(true);
+  }
+
+  function closeDeleteInterface() {
+    if (interfaceDeleting) {
+      return;
+    }
+
+    setShowDeleteInterface(false);
+    setSelectedInterface(null);
+  }
+
+  function handleInterfaceFormChange(event) {
+    const { name, value } = event.target;
+
+    setInterfaceForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  }
+
+  async function handleCreateInterface(event) {
+    event.preventDefault();
+
+    const name = interfaceForm.name.trim();
+
+    if (!name) {
+      setInterfaceError("Interface name is required");
+      return;
+    }
+
+    try {
+      setInterfaceSubmitting(true);
+      setInterfaceError("");
+
+      await createInterface(deviceId, {
+        name,
+        status: interfaceForm.status,
+      });
+
+      await loadInterfaces();
+
+      setShowAddInterface(false);
+      setInterfaceForm({
+        name: "",
+        status: "up",
+      });
+    } catch (err) {
+      setInterfaceError(err?.message || "Failed to create interface");
+    } finally {
+      setInterfaceSubmitting(false);
+    }
+  }
+
+  async function handleUpdateInterface(event) {
+    event.preventDefault();
+
+    if (!selectedInterface) {
+      return;
+    }
+
+    const name = interfaceForm.name.trim();
+
+    if (!name) {
+      setInterfaceError("Interface name is required");
+      return;
+    }
+
+    try {
+      setInterfaceSubmitting(true);
+      setInterfaceError("");
+
+      await updateInterface(selectedInterface.id, {
+        name,
+        status: interfaceForm.status,
+      });
+
+      await loadInterfaces();
+
+      setShowEditInterface(false);
+      setSelectedInterface(null);
+      setInterfaceForm({
+        name: "",
+        status: "up",
+      });
+    } catch (err) {
+      setInterfaceError(err?.message || "Failed to update interface");
+    } finally {
+      setInterfaceSubmitting(false);
+    }
+  }
+
+  async function handleDeleteInterface() {
+    if (!selectedInterface) {
+      return;
+    }
+
+    try {
+      setInterfaceDeleting(true);
+      setInterfaceError("");
+
+      await deleteInterface(selectedInterface.id);
+
+      await loadInterfaces();
+
+      setShowDeleteInterface(false);
+      setSelectedInterface(null);
+    } catch (err) {
+      setInterfaceError(err?.message || "Failed to delete interface");
+    } finally {
+      setInterfaceDeleting(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -253,17 +493,53 @@ function DeviceDetails({ deviceId, onBack }) {
         {/* INTERFACES */}
         <div className="detail-panel">
           <div className="panel-heading">
-            <span>Interfaces</span>
+            <div>
+              <span>Interfaces</span>
 
-            <strong>
-              {device.interfaces?.length || 0}{" "}
-              {device.interfaces?.length === 1 ? "interface" : "interfaces"}
-            </strong>
+              <strong>
+                {interfaces.length}{" "}
+                {interfaces.length === 1 ? "interface" : "interfaces"}
+              </strong>
+            </div>
+
+            <div>
+              <button
+                type="button"
+                className="primary-action"
+                onClick={openAddInterface}
+              >
+                <Plus size={16} />
+                <span>Add interface</span>
+              </button>
+
+              <button
+                type="button"
+                className="secondary-action"
+                onClick={loadInterfaces}
+                disabled={interfacesLoading}
+                aria-label="Refresh interfaces"
+                title="Refresh interfaces"
+              >
+                <RefreshCw
+                  size={16}
+                  className={interfacesLoading ? "spin" : ""}
+                />
+              </button>
+            </div>
           </div>
 
+          {interfaceError &&
+          !showAddInterface &&
+          !showEditInterface &&
+          !showDeleteInterface ? (
+            <div className="empty-inline error-state">{interfaceError}</div>
+          ) : null}
+
           <div className="interfaces-list">
-            {device.interfaces?.length ? (
-              device.interfaces.map((item) => (
+            {interfacesLoading ? (
+              <div className="empty-inline">Loading interfaces...</div>
+            ) : interfaces.length ? (
+              interfaces.map((item) => (
                 <div className="interface-row" key={item.id}>
                   <div className="interface-main">
                     <strong>{item.name}</strong>
@@ -272,6 +548,26 @@ function DeviceDetails({ deviceId, onBack }) {
                   </div>
 
                   <StatusBadge status={item.status} />
+
+                  <div className="interface-actions">
+                    <button
+                      type="button"
+                      onClick={() => openEditInterface(item)}
+                      aria-label={`Edit ${item.name}`}
+                      title={`Edit ${item.name}`}
+                    >
+                      <Pencil size={15} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => openDeleteInterface(item)}
+                      aria-label={`Delete ${item.name}`}
+                      title={`Delete ${item.name}`}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                 </div>
               ))
             ) : (
@@ -380,15 +676,23 @@ function DeviceDetails({ deviceId, onBack }) {
                       <XAxis
                         dataKey="time"
                         stroke="#777"
-                        tick={{ fill: "#999", fontSize: 11 }}
+                        tick={{
+                          fill: "#999",
+                          fontSize: 11,
+                        }}
                         tickLine={false}
-                        axisLine={{ stroke: "#444" }}
+                        axisLine={{
+                          stroke: "#444",
+                        }}
                       />
 
                       <YAxis
                         yAxisId="ms"
                         stroke="#3b82f6"
-                        tick={{ fill: "#999", fontSize: 11 }}
+                        tick={{
+                          fill: "#999",
+                          fontSize: 11,
+                        }}
                         tickLine={false}
                         axisLine={false}
                         width={45}
@@ -406,7 +710,10 @@ function DeviceDetails({ deviceId, onBack }) {
                         orientation="right"
                         domain={[0, 100]}
                         stroke="#ef4444"
-                        tick={{ fill: "#999", fontSize: 11 }}
+                        tick={{
+                          fill: "#999",
+                          fontSize: 11,
+                        }}
                         tickLine={false}
                         axisLine={false}
                         width={45}
@@ -552,14 +859,22 @@ function DeviceDetails({ deviceId, onBack }) {
                       <XAxis
                         dataKey="time"
                         stroke="#777"
-                        tick={{ fill: "#999", fontSize: 11 }}
+                        tick={{
+                          fill: "#999",
+                          fontSize: 11,
+                        }}
                         tickLine={false}
-                        axisLine={{ stroke: "#444" }}
+                        axisLine={{
+                          stroke: "#444",
+                        }}
                       />
 
                       <YAxis
                         domain={[0, 100]}
-                        tick={{ fill: "#999", fontSize: 11 }}
+                        tick={{
+                          fill: "#999",
+                          fontSize: 11,
+                        }}
                         tickLine={false}
                         axisLine={false}
                         width={45}
@@ -617,6 +932,202 @@ function DeviceDetails({ deviceId, onBack }) {
           )}
         </div>
       </section>
+
+      {/* ADD INTERFACE MODAL */}
+      {showAddInterface ? (
+        <InterfaceModal
+          title="Add interface"
+          description={`Add a new interface to ${device.name}.`}
+          form={interfaceForm}
+          onChange={handleInterfaceFormChange}
+          onSubmit={handleCreateInterface}
+          onClose={closeAddInterface}
+          submitting={interfaceSubmitting}
+          error={interfaceError}
+          submitLabel="Add interface"
+        />
+      ) : null}
+
+      {/* EDIT INTERFACE MODAL */}
+      {showEditInterface ? (
+        <InterfaceModal
+          title="Edit interface"
+          description={`Update ${selectedInterface?.name || "interface"}.`}
+          form={interfaceForm}
+          onChange={handleInterfaceFormChange}
+          onSubmit={handleUpdateInterface}
+          onClose={closeEditInterface}
+          submitting={interfaceSubmitting}
+          error={interfaceError}
+          submitLabel="Save changes"
+        />
+      ) : null}
+
+      {/* DELETE INTERFACE MODAL */}
+      {showDeleteInterface ? (
+        <div className="modal-overlay">
+          <div
+            className="modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-interface-title"
+          >
+            <div className="modal-header">
+              <div>
+                <span className="panel-kicker">Interface management</span>
+
+                <h2 id="delete-interface-title">Delete interface</h2>
+              </div>
+
+              <button
+                type="button"
+                className="modal-close-button"
+                onClick={closeDeleteInterface}
+                disabled={interfaceDeleting}
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <p>
+                Are you sure you want to delete{" "}
+                <strong>{selectedInterface?.name}</strong>?
+              </p>
+
+              <p>This action cannot be undone.</p>
+
+              {interfaceError ? (
+                <div className="form-error">{interfaceError}</div>
+              ) : null}
+            </div>
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="secondary-action"
+                onClick={closeDeleteInterface}
+                disabled={interfaceDeleting}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="danger-action"
+                onClick={handleDeleteInterface}
+                disabled={interfaceDeleting}
+              >
+                <Trash2 size={16} />
+
+                <span>
+                  {interfaceDeleting ? "Deleting..." : "Delete interface"}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function InterfaceModal({
+  title,
+  description,
+  form,
+  onChange,
+  onSubmit,
+  onClose,
+  submitting,
+  error,
+  submitLabel,
+}) {
+  return (
+    <div className="modal-overlay">
+      <div
+        className="modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="interface-modal-title"
+      >
+        <form onSubmit={onSubmit}>
+          <div className="modal-header">
+            <div>
+              <span className="panel-kicker">Interface management</span>
+
+              <h2 id="interface-modal-title">{title}</h2>
+
+              <p>{description}</p>
+            </div>
+
+            <button
+              type="button"
+              className="modal-close-button"
+              onClick={onClose}
+              disabled={submitting}
+              aria-label="Close"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="modal-body">
+            <label className="form-field">
+              <span>Interface name</span>
+
+              <input
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={onChange}
+                placeholder="e.g. GigabitEthernet0/0"
+                autoFocus
+                disabled={submitting}
+              />
+            </label>
+
+            <label className="form-field">
+              <span>Status</span>
+
+              <select
+                name="status"
+                value={form.status}
+                onChange={onChange}
+                disabled={submitting}
+              >
+                <option value="up">Up</option>
+
+                <option value="degraded">Degraded</option>
+
+                <option value="down">Down</option>
+              </select>
+            </label>
+
+            {error ? <div className="form-error">{error}</div> : null}
+          </div>
+
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="secondary-action"
+              onClick={onClose}
+              disabled={submitting}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              className="primary-action"
+              disabled={submitting}
+            >
+              {submitting ? "Saving..." : submitLabel}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
@@ -638,6 +1149,7 @@ function TelemetryMetric({ label, value, unit = "", tone }) {
 
         <strong>
           {displayValue}
+
           {unit && <small>{unit}</small>}
         </strong>
       </div>
@@ -661,7 +1173,9 @@ function TelemetryTooltip({ active, payload, label }) {
 
   const values = {
     latency: payload.find((item) => item.dataKey === "latency")?.value,
+
     packetLoss: payload.find((item) => item.dataKey === "packetLoss")?.value,
+
     jitter: payload.find((item) => item.dataKey === "jitter")?.value,
   };
 
@@ -674,6 +1188,7 @@ function TelemetryTooltip({ active, payload, label }) {
           <i className="tooltip-dot latency-dot" />
           Latency
         </span>
+
         <b>{values.latency ?? "—"} ms</b>
       </div>
 
@@ -682,6 +1197,7 @@ function TelemetryTooltip({ active, payload, label }) {
           <i className="tooltip-dot packet-loss-dot" />
           Packet Loss
         </span>
+
         <b>{values.packetLoss ?? "—"}%</b>
       </div>
 
@@ -690,6 +1206,7 @@ function TelemetryTooltip({ active, payload, label }) {
           <i className="tooltip-dot jitter-dot" />
           Jitter
         </span>
+
         <b>{values.jitter ?? "—"} ms</b>
       </div>
     </div>
@@ -703,7 +1220,9 @@ function ResourceTooltip({ active, payload, label }) {
 
   const values = {
     utilization: payload.find((item) => item.dataKey === "utilization")?.value,
+
     cpu: payload.find((item) => item.dataKey === "cpu")?.value,
+
     memory: payload.find((item) => item.dataKey === "memory")?.value,
   };
 
@@ -716,6 +1235,7 @@ function ResourceTooltip({ active, payload, label }) {
           <i className="tooltip-dot utilization-dot" />
           Utilization
         </span>
+
         <b>{values.utilization ?? "—"}%</b>
       </div>
 
@@ -724,6 +1244,7 @@ function ResourceTooltip({ active, payload, label }) {
           <i className="tooltip-dot cpu-dot" />
           CPU
         </span>
+
         <b>{values.cpu ?? "—"}%</b>
       </div>
 
@@ -732,6 +1253,7 @@ function ResourceTooltip({ active, payload, label }) {
           <i className="tooltip-dot memory-dot" />
           Memory
         </span>
+
         <b>{values.memory ?? "—"}%</b>
       </div>
     </div>

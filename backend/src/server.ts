@@ -8,6 +8,7 @@ import prisma from "./config/database.js";
 import { sendSuccess, sendError } from "./utils/apiResponse.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 import deviceRoutes from "./routes/deviceRoutes.js";
+import interfaceRoutes from "./routes/interfaceRoutes.js";
 import telemetryRoutes from "./routes/telemetryRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import predictionRoutes from "./routes/predictionRoutes.js";
@@ -57,6 +58,9 @@ app.use("/api/auth", authRoutes);
 
 // Device routes
 app.use("/api/devices", deviceRoutes);
+
+// Interface routes
+app.use("/api/interfaces", interfaceRoutes);
 
 // Telemetry routes
 app.use("/api/telemetry", telemetryRoutes);
