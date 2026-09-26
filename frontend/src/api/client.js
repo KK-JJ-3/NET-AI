@@ -64,14 +64,55 @@ export async function getDevice(id) {
 export async function getDeviceTelemetry(id, range = "1h") {
   return request(`/devices/${id}/telemetry?range=${range}`);
 }
-export async function getPredictions() {
-  return request("/predictions");
+export async function getPredictions(filters = {}) {
+  const params = new URLSearchParams();
+
+  if (filters.status) {
+    params.set("status", filters.status);
+  }
+
+  const query = params.toString();
+
+  return request(`/predictions${query ? `?${query}` : ""}`);
 }
 
-export async function getFaults() {
-  return request("/faults");
+export async function getPrediction(id) {
+  return request(`/predictions/${id}`);
 }
 
-export async function getAlerts() {
-  return request("/alerts");
+export async function getFaults(filters = {}) {
+  const params = new URLSearchParams();
+
+  if (filters.deviceId) {
+    params.set("deviceId", filters.deviceId);
+  }
+
+  if (filters.status) {
+    params.set("status", filters.status);
+  }
+
+  const query = params.toString();
+
+  return request(`/faults${query ? `?${query}` : ""}`);
+}
+export async function getFault(id) {
+  return request(`/faults/${id}`);
+}
+
+export async function getAlerts(filters = {}) {
+  const params = new URLSearchParams();
+
+  if (typeof filters.acknowledged === "boolean") {
+    params.set("acknowledged", filters.acknowledged);
+  }
+
+  const query = params.toString();
+
+  return request(`/alerts${query ? `?${query}` : ""}`);
+}
+
+export async function acknowledgeAlert(id) {
+  return request(`/alerts/${id}/ack`, {
+    method: "POST",
+  });
 }

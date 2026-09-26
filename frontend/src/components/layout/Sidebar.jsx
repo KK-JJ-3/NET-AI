@@ -27,19 +27,19 @@ const navigation = [
     id: "predictions",
     label: "Predictions",
     icon: ChartNoAxesCombined,
-    available: false,
+    available: true,
   },
   {
     id: "faults",
     label: "Faults",
     icon: CircleAlert,
-    available: false,
+    available: true,
   },
   {
     id: "alerts",
     label: "Alerts",
     icon: Bell,
-    available: false,
+    available: true,
   },
   {
     id: "topology",

@@ -11,6 +11,9 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Devices from "./pages/Devices";
 import DeviceDetails from "./pages/DeviceDetails";
+import Predictions from "./pages/Predictions";
+import Faults from "./pages/Faults";
+import Alerts from "./pages/Alerts";
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -49,6 +52,18 @@ function App() {
 
     if (activePage === "dashboard") {
       return <Dashboard />;
+    }
+
+    if (activePage === "predictions") {
+      return <Predictions />;
+    }
+
+    if (activePage === "faults") {
+      return <Faults />;
+    }
+
+    if (activePage === "alerts") {
+      return <Alerts />;
     }
 
     if (activePage === "devices") {
