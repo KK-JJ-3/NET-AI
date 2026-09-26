@@ -7,6 +7,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 
 const DEVICE_ICONS = {
@@ -35,7 +37,7 @@ const STATUS_CONFIG = {
   },
 };
 
-function DeviceCard({ device, onSelectDevice }) {
+function DeviceCard({ device, onSelectDevice, onEditDevice, onDeleteDevice }) {
   const DeviceIcon = DEVICE_ICONS[device.type] || Server;
 
   const status = STATUS_CONFIG[device.status] || {
@@ -50,6 +52,22 @@ function DeviceCard({ device, onSelectDevice }) {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       onSelectDevice(device.id);
+    }
+  }
+
+  function handleEdit(event) {
+    event.stopPropagation();
+
+    if (onEditDevice) {
+      onEditDevice(device);
+    }
+  }
+
+  function handleDelete(event) {
+    event.stopPropagation();
+
+    if (onDeleteDevice) {
+      onDeleteDevice(device);
     }
   }
 
@@ -89,6 +107,28 @@ function DeviceCard({ device, onSelectDevice }) {
         <strong title={device.location || "Not specified"}>
           {device.location || "Not specified"}
         </strong>
+      </div>
+
+      <div className="device-card-actions">
+        <button
+          type="button"
+          className="device-edit-button"
+          onClick={handleEdit}
+          aria-label={`Edit ${device.name}`}
+        >
+          <Pencil size={15} strokeWidth={2.4} />
+          <span>Edit</span>
+        </button>
+
+        <button
+          type="button"
+          className="device-delete-button"
+          onClick={handleDelete}
+          aria-label={`Delete ${device.name}`}
+        >
+          <Trash2 size={15} strokeWidth={2.4} />
+          <span>Delete</span>
+        </button>
       </div>
     </article>
   );

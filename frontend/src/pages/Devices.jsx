@@ -1,8 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
-import { RefreshCw, Search, SlidersHorizontal } from "lucide-react";
+import { RefreshCw, Search, SlidersHorizontal, X, Pencil } from "lucide-react";
 
-import { getDevices } from "../api/client";
+import {
+  createDevice,
+  getDevices,
+  updateDevice,
+  deleteDevice,
+} from "../api/client";
+
 import DeviceList from "../components/devices/DeviceList";
+
+import "../styles/devices.css";
+
+const INITIAL_FORM = {
+  name: "",
+  type: "router",
+  ipAddress: "",
+  status: "up",
+  location: "",
+};
 
 function Devices({ onSelectDevice }) {
   const [devices, setDevices] = useState([]);
@@ -15,6 +31,18 @@ function Devices({ onSelectDevice }) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
+
+  const [showAddDevice, setShowAddDevice] = useState(false);
+  const [showEditDevice, setShowEditDevice] = useState(false);
+  const [showDeleteDevice, setShowDeleteDevice] = useState(false);
+
+  const [formData, setFormData] = useState(INITIAL_FORM);
+  const [editDevice, setEditDevice] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const [formError, setFormError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function loadDevices(isRefresh = false) {
     try {
@@ -110,12 +138,186 @@ function Devices({ onSelectDevice }) {
     }
   }
 
+  function openAddDeviceModal() {
+    setFormData(INITIAL_FORM);
+    setFormError("");
+    setShowAddDevice(true);
+  }
+
+  function closeAddDeviceModal() {
+    if (submitting) {
+      return;
+    }
+
+    setShowAddDevice(false);
+    setFormData(INITIAL_FORM);
+    setFormError("");
+  }
+
+  function openEditDeviceModal(device) {
+    setEditDevice(device);
+
+    setFormData({
+      name: device.name || "",
+      type: device.type || "router",
+      ipAddress: device.ipAddress || "",
+      status: device.status || "up",
+      location: device.location || "",
+    });
+
+    setFormError("");
+    setShowEditDevice(true);
+  }
+
+  function closeEditDeviceModal() {
+    if (submitting) {
+      return;
+    }
+
+    setShowEditDevice(false);
+    setEditDevice(null);
+    setFormData(INITIAL_FORM);
+    setFormError("");
+  }
+
+  function openDeleteDeviceModal(device) {
+    setDeleteTarget(device);
+    setFormError("");
+    setShowDeleteDevice(true);
+  }
+
+  function closeDeleteDeviceModal() {
+    if (deleting) {
+      return;
+    }
+
+    setShowDeleteDevice(false);
+    setDeleteTarget(null);
+    setFormError("");
+  }
+
+  function handleFormChange(event) {
+    const { name, value } = event.target;
+
+    setFormData((current) => ({
+      ...current,
+      [name]: value,
+    }));
+
+    if (formError) {
+      setFormError("");
+    }
+  }
+
+  async function handleCreateDevice(event) {
+    event.preventDefault();
+
+    setFormError("");
+
+    if (!formData.name.trim()) {
+      setFormError("Device name is required.");
+      return;
+    }
+
+    if (!formData.ipAddress.trim()) {
+      setFormError("IP address is required.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      await createDevice({
+        name: formData.name.trim(),
+        type: formData.type,
+        ipAddress: formData.ipAddress.trim(),
+        status: formData.status,
+        location: formData.location.trim() || null,
+      });
+
+      setShowAddDevice(false);
+      setFormData(INITIAL_FORM);
+
+      await loadDevices();
+    } catch (err) {
+      setFormError(err.message || "Failed to create device");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleUpdateDevice(event) {
+    event.preventDefault();
+
+    setFormError("");
+
+    if (!editDevice) {
+      return;
+    }
+
+    if (!formData.name.trim()) {
+      setFormError("Device name is required.");
+      return;
+    }
+
+    if (!formData.ipAddress.trim()) {
+      setFormError("IP address is required.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      await updateDevice(editDevice.id, {
+        name: formData.name.trim(),
+        type: formData.type,
+        ipAddress: formData.ipAddress.trim(),
+        status: formData.status,
+        location: formData.location.trim() || null,
+      });
+
+      setShowEditDevice(false);
+      setEditDevice(null);
+      setFormData(INITIAL_FORM);
+
+      await loadDevices();
+    } catch (err) {
+      setFormError(err.message || "Failed to update device");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleDeleteDevice() {
+    if (!deleteTarget) {
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      setFormError("");
+
+      await deleteDevice(deleteTarget.id);
+
+      setShowDeleteDevice(false);
+      setDeleteTarget(null);
+
+      await loadDevices();
+    } catch (err) {
+      setFormError(err.message || "Failed to delete device");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="page-content">
         <div className="state-panel">
           <div className="loading-indicator" />
+
           <strong>Loading devices</strong>
+
           <span>Fetching registered network devices...</span>
         </div>
       </div>
@@ -127,6 +329,7 @@ function Devices({ onSelectDevice }) {
       <div className="page-content">
         <div className="state-panel error-state">
           <strong>Unable to load devices</strong>
+
           <span>{error}</span>
 
           <button
@@ -153,12 +356,14 @@ function Devices({ onSelectDevice }) {
           <p className="page-subtitle">Every device on your network.</p>
         </div>
 
-        <div className="total-card">
-          <span className="total-card-label">Total</span>
+        <div className="devices-hero-total">
+          <div className="total-card">
+            <span className="total-card-label">Total</span>
 
-          <strong>{String(devices.length).padStart(2, "0")}</strong>
+            <strong>{String(devices.length).padStart(2, "0")}</strong>
 
-          <span className="total-card-caption">Devices</span>
+            <span className="total-card-caption">Devices</span>
+          </div>
         </div>
       </section>
 
@@ -231,6 +436,7 @@ function Devices({ onSelectDevice }) {
               aria-pressed={active}
             >
               <span>{label}</span>
+
               <strong>{count}</strong>
             </button>
           );
@@ -249,23 +455,323 @@ function Devices({ onSelectDevice }) {
 
       {/* DEVICE GRID */}
       <section className="devices-grid-section">
-        {filteredDevices.length === 0 ? (
-          <div className="state-panel empty-state">
-            <strong>No devices found</strong>
-
-            <span>
-              {searchQuery
-                ? "Try a different search."
-                : "No devices match the selected status."}
-            </span>
-          </div>
-        ) : (
-          <DeviceList
-            devices={filteredDevices}
-            onSelectDevice={onSelectDevice}
-          />
-        )}
+        <DeviceList
+          devices={filteredDevices}
+          onSelectDevice={onSelectDevice}
+          onEditDevice={openEditDeviceModal}
+          onDeleteDevice={openDeleteDeviceModal}
+          onAddDevice={openAddDeviceModal}
+        />
       </section>
+
+      {/* ADD DEVICE MODAL */}
+      {showAddDevice && (
+        <div
+          className="device-modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeAddDeviceModal();
+            }
+          }}
+        >
+          <section
+            className="device-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-device-title"
+          >
+            <div className="device-modal-header">
+              <div>
+                <span className="device-modal-kicker">Infrastructure</span>
+
+                <h2 id="add-device-title">Add device</h2>
+
+                <p>Register a new network device in NetFault AI.</p>
+              </div>
+
+              <button
+                type="button"
+                className="device-modal-close"
+                onClick={closeAddDeviceModal}
+                disabled={submitting}
+                aria-label="Close add device form"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form className="device-form" onSubmit={handleCreateDevice}>
+              {formError && (
+                <div className="device-form-error" role="alert">
+                  {formError}
+                </div>
+              )}
+
+              <DeviceFormFields
+                formData={formData}
+                onChange={handleFormChange}
+                submitting={submitting}
+              />
+
+              <div className="device-form-actions">
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={closeAddDeviceModal}
+                  disabled={submitting}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="primary-action"
+                  disabled={submitting}
+                >
+                  {submitting ? "Adding device..." : "Add Device"}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {/* EDIT DEVICE MODAL */}
+      {showEditDevice && (
+        <div
+          className="device-modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeEditDeviceModal();
+            }
+          }}
+        >
+          <section
+            className="device-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-device-title"
+          >
+            <div className="device-modal-header">
+              <div>
+                <span className="device-modal-kicker">Infrastructure</span>
+
+                <h2 id="edit-device-title">Edit device</h2>
+
+                <p>
+                  Update the configuration of{" "}
+                  <strong>{editDevice?.name || "this device"}</strong>.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="device-modal-close"
+                onClick={closeEditDeviceModal}
+                disabled={submitting}
+                aria-label="Close edit device form"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form className="device-form" onSubmit={handleUpdateDevice}>
+              {formError && (
+                <div className="device-form-error" role="alert">
+                  {formError}
+                </div>
+              )}
+
+              <DeviceFormFields
+                formData={formData}
+                onChange={handleFormChange}
+                submitting={submitting}
+              />
+
+              <div className="device-form-actions">
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={closeEditDeviceModal}
+                  disabled={submitting}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="primary-action"
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    "Saving changes..."
+                  ) : (
+                    <>
+                      <Pencil size={16} />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {/* DELETE DEVICE MODAL */}
+      {showDeleteDevice && (
+        <div
+          className="device-modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeDeleteDeviceModal();
+            }
+          }}
+        >
+          <section
+            className="device-modal device-delete-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-device-title"
+          >
+            <div className="device-modal-header">
+              <div>
+                <span className="device-modal-kicker">Destructive action</span>
+
+                <h2 id="delete-device-title">Delete device</h2>
+
+                <p>This action cannot be undone.</p>
+              </div>
+
+              <button
+                type="button"
+                className="device-modal-close"
+                onClick={closeDeleteDeviceModal}
+                disabled={deleting}
+                aria-label="Close delete confirmation"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="device-delete-content">
+              {formError && (
+                <div className="device-form-error" role="alert">
+                  {formError}
+                </div>
+              )}
+
+              <p>
+                Are you sure you want to delete{" "}
+                <strong>{deleteTarget?.name || "this device"}</strong>?
+              </p>
+
+              <p className="device-delete-warning">
+                The device and its associated interfaces, telemetry, faults,
+                predictions, and alerts will be permanently removed.
+              </p>
+
+              <div className="device-form-actions">
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={closeDeleteDeviceModal}
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className="delete-confirm-button"
+                  onClick={handleDeleteDevice}
+                  disabled={deleting}
+                >
+                  {deleting ? "Deleting..." : "Delete Device"}
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DeviceFormFields({ formData, onChange, submitting }) {
+  return (
+    <div className="device-form-grid">
+      <label className="device-form-field">
+        <span>Device name</span>
+
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={onChange}
+          placeholder="e.g. Branch-Router-01"
+          disabled={submitting}
+          autoFocus
+        />
+      </label>
+
+      <label className="device-form-field">
+        <span>Device type</span>
+
+        <select
+          name="type"
+          value={formData.type}
+          onChange={onChange}
+          disabled={submitting}
+        >
+          <option value="router">Router</option>
+          <option value="switch">Switch</option>
+          <option value="firewall">Firewall</option>
+          <option value="access_point">Access Point</option>
+          <option value="server">Server</option>
+        </select>
+      </label>
+
+      <label className="device-form-field">
+        <span>IP address</span>
+
+        <input
+          type="text"
+          name="ipAddress"
+          value={formData.ipAddress}
+          onChange={onChange}
+          placeholder="e.g. 192.168.10.20"
+          disabled={submitting}
+        />
+      </label>
+
+      <label className="device-form-field">
+        <span>Status</span>
+
+        <select
+          name="status"
+          value={formData.status}
+          onChange={onChange}
+          disabled={submitting}
+        >
+          <option value="up">Up</option>
+          <option value="degraded">Degraded</option>
+          <option value="down">Down</option>
+        </select>
+      </label>
+
+      <label className="device-form-field device-form-field-full">
+        <span>Location</span>
+
+        <input
+          type="text"
+          name="location"
+          value={formData.location}
+          onChange={onChange}
+          placeholder="e.g. Main Server Room"
+          disabled={submitting}
+        />
+      </label>
     </div>
   );
 }
