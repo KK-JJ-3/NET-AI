@@ -1,6 +1,8 @@
 import type { Request, Response } from "express";
 
 import prisma from "../config/database.js";
+import { predictFault } from "../services/aiServiceClient.js";
+import { generatePrediction } from "../services/predictionGenerationService.js";
 import { sendError, sendSuccess } from "../utils/apiResponse.js";
 
 export async function createTelemetry(
@@ -68,7 +70,53 @@ export async function createTelemetry(
       },
     });
 
-    return sendSuccess(res, telemetry, 201);
+    let prediction = null;
+
+    try {
+      const recentTelemetry = await prisma.telemetry.findMany({
+        where: {
+          deviceId,
+        },
+        orderBy: {
+          recordedAt: "desc",
+        },
+        take: 15,
+      });
+
+      if (recentTelemetry.length >= 15) {
+        const aiWindow = recentTelemetry
+          .slice()
+          .reverse()
+          .map((item) => ({
+            recordedAt: item.recordedAt,
+            latencyMs: item.latencyMs,
+            packetLossPct: item.packetLossPct,
+            jitterMs: item.jitterMs,
+            utilizationPct: item.utilizationPct,
+            cpuPct: item.cpuPct,
+            memoryPct: item.memoryPct,
+            availability: item.availability ? 1 : 0,
+          }));
+
+        const aiResult = await predictFault(deviceId, aiWindow);
+
+        prediction = await generatePrediction(deviceId, aiResult);
+      }
+    } catch (scoringError) {
+      console.error(
+        `Telemetry scoring failed for device ${deviceId}:`,
+        scoringError,
+      );
+    }
+
+    return sendSuccess(
+      res,
+      {
+        telemetry,
+        prediction,
+      },
+      201,
+    );
   } catch (error) {
     console.error("Failed to create telemetry:", error);
 

@@ -15,6 +15,7 @@ import predictionRoutes from "./routes/predictionRoutes.js";
 import faultRoutes from "./routes/faultRoutes.js";
 import alertRoutes from "./routes/alertRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import { startPredictionOutcomeScheduler } from "./services/predictionOutcomeScheduler.js";
 
 dotenv.config();
 import { env } from "./config/env.js";
@@ -86,4 +87,5 @@ app.use(errorHandler);
 // Start server
 app.listen(PORT, () => {
   console.log(`NetFault AI backend running on http://localhost:${PORT}`);
+  startPredictionOutcomeScheduler();
 });
