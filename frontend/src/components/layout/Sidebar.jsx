@@ -45,7 +45,7 @@ const navigation = [
     id: "topology",
     label: "Topology",
     icon: Network,
-    available: false,
+    available: true,
   },
 ];
 
