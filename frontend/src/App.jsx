@@ -14,6 +14,7 @@ import DeviceDetails from "./pages/DeviceDetails";
 import Predictions from "./pages/Predictions";
 import Faults from "./pages/Faults";
 import Alerts from "./pages/Alerts";
+import Topology from "./pages/Topology";
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -64,6 +65,10 @@ function App() {
 
     if (activePage === "alerts") {
       return <Alerts />;
+    }
+
+    if (activePage === "topology") {
+      return <Topology onSelectDevice={handleSelectDevice} />;
     }
 
     if (activePage === "devices") {

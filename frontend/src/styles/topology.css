@@ -1,0 +1,1375 @@
+/* =========================================================
+   NETFAULT AI — NETWORK TOPOLOGY
+   ========================================================= */
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.topology-page {
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+
+  padding: 34px 44px 56px;
+
+  overflow: visible;
+}
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+
+.topology-page .page-header {
+  width: 100%;
+
+  margin: 0 0 26px;
+  padding: 0;
+
+  box-sizing: border-box;
+
+  text-align: left;
+}
+
+.topology-page .page-eyebrow {
+  margin: 0 0 10px;
+
+  color: var(--lime);
+
+  font-size: 12px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+}
+
+.topology-page .page-header h1 {
+  margin: 0;
+
+  color: var(--text);
+
+  font-size: clamp(38px, 4vw, 54px);
+  line-height: 1.02;
+
+  font-weight: 900;
+
+  letter-spacing: -0.045em;
+
+  text-align: left;
+}
+
+.topology-page .page-description {
+  margin: 12px 0 0;
+
+  color: var(--muted);
+
+  font-size: 15px;
+  line-height: 1.5;
+
+  text-align: left;
+}
+
+/* =========================================================
+   MAIN CARD
+   ========================================================= */
+
+.topology-card {
+  position: relative;
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  border: 2px solid var(--border);
+
+  background: #0d0d0d;
+
+  box-shadow: 6px 6px 0 #000;
+
+  overflow: visible;
+}
+
+/* =========================================================
+   CARD HEADER
+   ========================================================= */
+
+.topology-card-header {
+  width: 100%;
+  min-height: 86px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 32px;
+
+  padding: 18px 26px;
+
+  box-sizing: border-box;
+
+  border-bottom: 2px solid var(--border);
+
+  background: #111;
+
+  text-align: left;
+}
+
+.topology-card-header > div:first-child {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+
+  text-align: left;
+}
+
+.topology-card-header h2 {
+  margin: 0;
+
+  color: var(--text);
+
+  font-size: 19px;
+  line-height: 1.15;
+
+  font-weight: 900;
+
+  letter-spacing: -0.02em;
+
+  text-align: left;
+}
+
+.topology-card-header p {
+  margin: 7px 0 0;
+
+  color: var(--muted);
+
+  font-size: 11px;
+  line-height: 1.4;
+
+  text-align: left;
+}
+
+/* =========================================================
+   DEVICE SUMMARY
+   ========================================================= */
+
+.topology-device-summary {
+  min-width: max-content;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 18px;
+
+  flex-shrink: 0;
+}
+
+.topology-device-summary > span:not(.topology-summary-divider) {
+  min-width: 48px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  text-align: center;
+}
+
+.topology-device-summary strong {
+  display: block;
+
+  margin: 0;
+
+  color: var(--text);
+
+  font-size: 18px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  text-align: center;
+}
+
+.topology-device-summary small {
+  display: block;
+
+  margin: 0;
+
+  color: var(--muted);
+
+  font-size: 8px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+
+  text-align: center;
+}
+
+.topology-summary-divider {
+  width: 1px;
+  height: 34px;
+
+  flex: 0 0 1px;
+
+  background: var(--border);
+}
+
+.topology-summary-up strong {
+  color: var(--lime);
+}
+
+.topology-summary-warning strong {
+  color: var(--warning);
+}
+
+.topology-summary-critical strong {
+  color: var(--danger);
+}
+
+/* =========================================================
+   GRAPH CONTAINER
+   ========================================================= */
+
+.topology-graph-container {
+  width: 100%;
+
+  padding: 18px;
+
+  box-sizing: border-box;
+
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    #090909;
+
+  background-size: 32px 32px;
+}
+
+/* =========================================================
+   GRAPH
+   ========================================================= */
+
+.topology-graph {
+  position: relative;
+
+  width: 100%;
+
+  min-height: 520px;
+
+  box-sizing: border-box;
+
+  padding: 16px;
+
+  border: 2px dashed #303030;
+
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(170, 255, 0, 0.055),
+      transparent 42%
+    ),
+    linear-gradient(rgba(255, 255, 255, 0.014) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px),
+    #080808;
+
+  background-size:
+    auto,
+    32px 32px,
+    32px 32px;
+
+  overflow: visible;
+}
+
+/* =========================================================
+   STATIC GRAPH AREA
+   ========================================================= */
+
+.topology-static-layout {
+  position: relative;
+
+  width: 100%;
+
+  min-height: 488px;
+
+  box-sizing: border-box;
+
+  overflow: visible;
+}
+
+/* =========================================================
+   CONNECTION SVG
+   ========================================================= */
+
+.topology-connections {
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: visible;
+
+  pointer-events: none;
+
+  z-index: 1;
+}
+
+/* =========================================================
+   CONNECTION BASE
+   ========================================================= */
+
+.topology-connection {
+  fill: none;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  vector-effect: non-scaling-stroke;
+
+  transition:
+    opacity 160ms ease,
+    stroke-width 160ms ease;
+}
+
+/* =========================================================
+   CORE CONNECTION
+   Neutral white
+   Does NOT represent device health
+   ========================================================= */
+
+.topology-connection--core {
+  stroke: #d8d8d8;
+
+  stroke-width: 3;
+
+  opacity: 0.9;
+
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.2));
+}
+
+/* =========================================================
+   ACCESS CONNECTION
+   Cyan / blue
+   Does NOT represent warning state
+   ========================================================= */
+
+.topology-connection--access {
+  stroke: #35c9e8;
+
+  stroke-width: 2.5;
+
+  opacity: 0.82;
+
+  filter: drop-shadow(0 0 3px rgba(53, 201, 232, 0.18));
+}
+
+/* =========================================================
+   BRANCH CONNECTION
+   Muted blue-gray
+   Does NOT represent warning state
+   ========================================================= */
+
+.topology-connection--branch {
+  stroke: #687783;
+
+  stroke-width: 2.2;
+
+  opacity: 0.72;
+
+  filter: drop-shadow(0 0 2px rgba(104, 119, 131, 0.16));
+}
+
+/* =========================================================
+   NODE SLOT
+   ========================================================= */
+
+.topology-node-slot {
+  position: absolute;
+
+  width: 76px;
+  height: 76px;
+
+  transform: translate(-50%, -50%);
+
+  overflow: visible;
+
+  z-index: 5;
+}
+
+/* =========================================================
+   NODE BUTTON
+   ========================================================= */
+
+.topology-node {
+  position: relative;
+
+  width: 58px;
+  height: 58px;
+
+  margin: 9px;
+
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  border: 2px solid #666;
+
+  border-radius: 50%;
+
+  background: #101010;
+
+  color: var(--text);
+
+  cursor: pointer;
+
+  appearance: none;
+
+  z-index: 6;
+
+  transition:
+    transform 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.topology-node:hover {
+  transform: scale(1.07);
+
+  background: #151515;
+}
+
+.topology-node:active {
+  transform: scale(0.96);
+}
+
+.topology-node:focus-visible {
+  outline: 2px solid var(--lime);
+
+  outline-offset: 4px;
+}
+
+/* =========================================================
+   STATUS COLORS
+   These colors belong ONLY to device status.
+   ========================================================= */
+
+.topology-node-normal {
+  border-color: var(--lime);
+
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.85),
+    0 0 20px rgba(170, 255, 0, 0.18);
+}
+
+.topology-node-normal:hover {
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.9),
+    0 0 28px rgba(170, 255, 0, 0.32);
+}
+
+.topology-node-warning {
+  border-color: var(--warning);
+
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.85),
+    0 0 20px rgba(255, 176, 0, 0.18);
+}
+
+.topology-node-warning:hover {
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.9),
+    0 0 28px rgba(255, 176, 0, 0.32);
+}
+
+.topology-node-critical {
+  border-color: var(--danger);
+
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.85),
+    0 0 20px rgba(255, 77, 103, 0.18);
+}
+
+.topology-node-critical:hover {
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.9),
+    0 0 28px rgba(255, 77, 103, 0.32);
+}
+
+.topology-node-unknown {
+  border-color: #777;
+
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.85),
+    0 0 18px rgba(120, 120, 120, 0.12);
+}
+
+/* =========================================================
+   NODE ICON
+   ========================================================= */
+
+.topology-node-icon {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  pointer-events: none;
+}
+
+.topology-node-icon .device-icon {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  box-shadow: none;
+}
+
+.topology-node-icon .device-icon svg,
+.topology-node-icon svg {
+  width: 25px;
+  height: 25px;
+
+  color: #eeeeee;
+
+  stroke-width: 1.8;
+}
+
+/* =========================================================
+   HIDE ACCESSIBILITY CONTENT
+   ========================================================= */
+
+.topology-node-content,
+.topology-node-status,
+.topology-node-status-badge {
+  position: absolute;
+
+  width: 1px;
+  height: 1px;
+
+  overflow: hidden;
+
+  clip: rect(0 0 0 0);
+
+  clip-path: inset(50%);
+
+  white-space: nowrap;
+}
+
+/* =========================================================
+   HOVER INFORMATION CARD
+   ========================================================= */
+
+.topology-node-tooltip {
+  position: absolute;
+
+  width: 174px;
+
+  padding: 12px 13px;
+
+  box-sizing: border-box;
+
+  border: 2px solid #484848;
+
+  background: #111;
+
+  box-shadow: 5px 5px 0 #000;
+
+  text-align: left;
+
+  opacity: 0;
+
+  visibility: hidden;
+
+  pointer-events: none;
+
+  z-index: 100;
+
+  transition:
+    opacity 120ms ease,
+    visibility 120ms ease,
+    transform 120ms ease;
+}
+
+/* =========================================================
+   TOOLTIP — RIGHT
+   ========================================================= */
+
+.topology-node-tooltip--right {
+  left: calc(100% + 22px);
+
+  top: 50%;
+
+  transform: translateY(-50%) translateX(-5px);
+}
+
+.topology-node-slot:hover .topology-node-tooltip--right,
+.topology-node-slot:focus-within .topology-node-tooltip--right {
+  opacity: 1;
+
+  visibility: visible;
+
+  transform: translateY(-50%) translateX(0);
+}
+
+.topology-node-tooltip--right::before {
+  content: "";
+
+  position: absolute;
+
+  left: -7px;
+
+  top: 50%;
+
+  width: 9px;
+  height: 9px;
+
+  transform: translateY(-50%) rotate(45deg);
+
+  border-left: 2px solid #484848;
+  border-bottom: 2px solid #484848;
+
+  background: #111;
+}
+
+/* =========================================================
+   TOOLTIP — LEFT
+   ========================================================= */
+
+.topology-node-tooltip--left {
+  right: calc(100% + 22px);
+
+  top: 50%;
+
+  transform: translateY(-50%) translateX(5px);
+}
+
+.topology-node-slot:hover .topology-node-tooltip--left,
+.topology-node-slot:focus-within .topology-node-tooltip--left {
+  opacity: 1;
+
+  visibility: visible;
+
+  transform: translateY(-50%) translateX(0);
+}
+
+.topology-node-tooltip--left::before {
+  content: "";
+
+  position: absolute;
+
+  right: -7px;
+
+  top: 50%;
+
+  width: 9px;
+  height: 9px;
+
+  transform: translateY(-50%) rotate(45deg);
+
+  border-right: 2px solid #484848;
+  border-top: 2px solid #484848;
+
+  background: #111;
+}
+
+/* =========================================================
+   TOOLTIP — TOP
+   ========================================================= */
+
+.topology-node-tooltip--top {
+  left: 50%;
+
+  bottom: calc(100% + 22px);
+
+  transform: translateX(-50%) translateY(5px);
+}
+
+.topology-node-slot:hover .topology-node-tooltip--top,
+.topology-node-slot:focus-within .topology-node-tooltip--top {
+  opacity: 1;
+
+  visibility: visible;
+
+  transform: translateX(-50%) translateY(0);
+}
+
+.topology-node-tooltip--top::before {
+  content: "";
+
+  position: absolute;
+
+  left: 50%;
+
+  bottom: -7px;
+
+  width: 9px;
+  height: 9px;
+
+  transform: translateX(-50%) rotate(45deg);
+
+  border-right: 2px solid #484848;
+  border-bottom: 2px solid #484848;
+
+  background: #111;
+}
+
+/* =========================================================
+   TOOLTIP HEADER
+   ========================================================= */
+
+.topology-tooltip-header {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  margin: 0 0 6px;
+}
+
+.topology-tooltip-name {
+  min-width: 0;
+
+  display: block;
+
+  overflow: hidden;
+
+  color: var(--text);
+
+  font-size: 11px;
+  line-height: 1.2;
+
+  font-weight: 900;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.topology-tooltip-status-dot {
+  width: 7px;
+  height: 7px;
+
+  flex: 0 0 7px;
+
+  border-radius: 50%;
+}
+
+.topology-tooltip-status-dot--up {
+  background: var(--lime);
+
+  box-shadow: 0 0 7px rgba(170, 255, 0, 0.45);
+}
+
+.topology-tooltip-status-dot--degraded {
+  background: var(--warning);
+
+  box-shadow: 0 0 7px rgba(255, 176, 0, 0.4);
+}
+
+.topology-tooltip-status-dot--down {
+  background: var(--danger);
+
+  box-shadow: 0 0 7px rgba(255, 77, 103, 0.4);
+}
+
+.topology-tooltip-status-dot--unknown {
+  background: #777;
+}
+
+/* =========================================================
+   TOOLTIP CONTENT
+   ========================================================= */
+
+.topology-tooltip-type {
+  display: block;
+
+  margin: 0 0 8px;
+
+  color: var(--muted);
+
+  font-size: 8px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+
+  text-transform: uppercase;
+}
+
+.topology-tooltip-ip {
+  display: block;
+
+  margin: 0 0 6px;
+
+  color: #d8d8d8;
+
+  font-family: monospace;
+
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+.topology-tooltip-location {
+  display: block;
+
+  margin: 0 0 9px;
+
+  overflow: hidden;
+
+  color: var(--muted);
+
+  font-size: 9px;
+  line-height: 1.3;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.topology-tooltip-status {
+  min-height: 20px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 4px;
+
+  padding: 0 7px;
+
+  border: 1px solid currentColor;
+
+  font-size: 8px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.05em;
+
+  text-transform: uppercase;
+}
+
+.topology-tooltip-status--up {
+  color: var(--lime);
+}
+
+.topology-tooltip-status--degraded {
+  color: var(--warning);
+}
+
+.topology-tooltip-status--down {
+  color: var(--danger);
+}
+
+.topology-tooltip-status--unknown {
+  color: #888;
+}
+
+/* =========================================================
+   RELATIONSHIP NOTE
+   ========================================================= */
+
+.topology-relationship-note {
+  position: absolute;
+
+  left: 14px;
+  bottom: 12px;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  min-height: 24px;
+
+  padding: 0 9px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #303030;
+
+  background: rgba(8, 8, 8, 0.94);
+
+  color: #777;
+
+  font-size: 8px;
+  line-height: 1;
+
+  font-weight: 800;
+
+  letter-spacing: 0.05em;
+
+  text-transform: uppercase;
+
+  z-index: 20;
+}
+
+.topology-relationship-indicator {
+  width: 6px;
+  height: 6px;
+
+  flex: 0 0 6px;
+
+  background: #777;
+}
+
+/* =========================================================
+   PLACEHOLDER
+   ========================================================= */
+
+.topology-placeholder {
+  min-height: 520px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  box-sizing: border-box;
+
+  border: 2px dashed #303030;
+
+  background: #090909;
+
+  text-align: center;
+}
+
+.topology-placeholder strong {
+  color: var(--text);
+
+  font-size: 15px;
+
+  font-weight: 900;
+}
+
+.topology-placeholder span {
+  color: var(--muted);
+
+  font-size: 11px;
+}
+
+.topology-placeholder-error {
+  border-color: rgba(255, 77, 103, 0.35);
+}
+
+.topology-placeholder-error strong {
+  color: var(--danger);
+}
+
+/* =========================================================
+   EMPTY GRAPH
+   ========================================================= */
+
+.topology-graph-empty {
+  min-height: 488px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  text-align: center;
+}
+
+.topology-graph-empty-icon {
+  width: 50px;
+  height: 50px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 4px;
+
+  border: 2px solid #444;
+
+  border-radius: 50%;
+
+  color: #777;
+
+  background: #111;
+}
+
+.topology-graph-empty strong {
+  color: var(--text);
+
+  font-size: 15px;
+
+  font-weight: 900;
+}
+
+.topology-graph-empty > span {
+  color: var(--muted);
+
+  font-size: 11px;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.topology-footer {
+  min-height: 50px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 10px 22px;
+
+  box-sizing: border-box;
+
+  border-top: 2px solid var(--border);
+
+  background: #0f0f0f;
+}
+
+.topology-legend {
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+
+  flex-wrap: wrap;
+}
+
+.topology-legend-title {
+  color: var(--text);
+
+  font-size: 10px;
+  line-height: 1;
+
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+.topology-legend-item {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  color: var(--muted);
+
+  font-size: 9px;
+  line-height: 1;
+
+  font-weight: 800;
+}
+
+.topology-status-dot {
+  width: 7px;
+  height: 7px;
+
+  flex: 0 0 7px;
+
+  display: inline-block;
+}
+
+.topology-status-normal {
+  background: var(--lime);
+}
+
+.topology-status-warning {
+  background: var(--warning);
+}
+
+.topology-status-critical {
+  background: var(--danger);
+}
+
+.topology-status-unknown {
+  background: #777;
+}
+
+.topology-data-note {
+  color: #666;
+
+  font-size: 9px;
+  line-height: 1.4;
+
+  text-align: right;
+}
+
+/* =========================================================
+   RESPONSIVE — 1200px
+   ========================================================= */
+
+@media (max-width: 1200px) {
+  .topology-page {
+    padding: 30px 32px 50px;
+  }
+
+  .topology-card-header {
+    padding: 17px 22px;
+  }
+
+  .topology-device-summary {
+    gap: 14px;
+  }
+
+  .topology-graph {
+    min-height: 500px;
+  }
+
+  .topology-static-layout {
+    min-height: 468px;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE — 900px
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .topology-page {
+    padding: 26px 24px 46px;
+  }
+
+  .topology-card-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 16px;
+  }
+
+  .topology-device-summary {
+    width: 100%;
+
+    justify-content: flex-start;
+  }
+
+  .topology-graph {
+    min-height: 470px;
+  }
+
+  .topology-static-layout {
+    min-height: 438px;
+  }
+
+  .topology-footer {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .topology-data-note {
+    text-align: left;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE — 700px
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .topology-page {
+    padding: 22px 18px 42px;
+  }
+
+  .topology-page .page-header h1 {
+    font-size: 38px;
+  }
+
+  .topology-card-header {
+    padding: 16px;
+  }
+
+  .topology-graph-container {
+    padding: 12px;
+  }
+
+  .topology-graph {
+    min-height: 450px;
+
+    padding: 10px;
+  }
+
+  .topology-static-layout {
+    min-height: 418px;
+  }
+
+  .topology-node-slot {
+    width: 70px;
+    height: 70px;
+  }
+
+  .topology-node {
+    width: 54px;
+    height: 54px;
+
+    margin: 8px;
+  }
+
+  .topology-node-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .topology-node-tooltip {
+    width: 150px;
+
+    padding: 10px;
+  }
+
+  .topology-footer {
+    padding: 12px 16px;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE — 520px
+   ========================================================= */
+
+@media (max-width: 520px) {
+  .topology-page {
+    padding: 18px 12px 34px;
+  }
+
+  .topology-page .page-header {
+    margin-bottom: 18px;
+  }
+
+  .topology-page .page-header h1 {
+    font-size: 34px;
+  }
+
+  .topology-page .page-description {
+    font-size: 13px;
+  }
+
+  .topology-card-header {
+    padding: 14px;
+  }
+
+  .topology-card-header h2 {
+    font-size: 16px;
+  }
+
+  .topology-device-summary {
+    width: 100%;
+
+    justify-content: space-between;
+
+    gap: 8px;
+  }
+
+  .topology-device-summary > span:not(.topology-summary-divider) {
+    min-width: 36px;
+  }
+
+  .topology-summary-divider {
+    height: 28px;
+  }
+
+  .topology-graph-container {
+    padding: 8px;
+  }
+
+  .topology-graph {
+    min-height: 420px;
+
+    padding: 8px;
+  }
+
+  .topology-static-layout {
+    min-height: 388px;
+  }
+
+  .topology-node-slot {
+    width: 66px;
+    height: 66px;
+  }
+
+  .topology-node {
+    width: 50px;
+    height: 50px;
+
+    margin: 8px;
+  }
+
+  .topology-node-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .topology-node-tooltip {
+    width: 145px;
+
+    padding: 9px;
+  }
+
+  .topology-tooltip-name {
+    font-size: 10px;
+  }
+
+  .topology-tooltip-ip,
+  .topology-tooltip-location {
+    font-size: 8px;
+  }
+
+  .topology-footer {
+    padding: 11px 14px;
+  }
+
+  .topology-legend {
+    gap: 10px;
+  }
+
+  .topology-data-note {
+    font-size: 8px;
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .topology-node,
+  .topology-node-tooltip {
+    transition: none;
+  }
+}
