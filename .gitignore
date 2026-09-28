@@ -2,12 +2,14 @@
 # NetFault AI - Root Git Ignore
 # ============================================================
 
+
 # ------------------------------------------------------------
 # Dependencies
 # ------------------------------------------------------------
 
 node_modules/
 **/node_modules/
+
 
 # ------------------------------------------------------------
 # Environment / Secrets
@@ -17,6 +19,7 @@ node_modules/
 .env.*
 !.env.example
 !.env.example.*
+
 
 # ------------------------------------------------------------
 # Build / Distribution
@@ -40,6 +43,7 @@ coverage/
 .cache/
 **/.cache/
 
+
 # ------------------------------------------------------------
 # Logs
 # ------------------------------------------------------------
@@ -50,11 +54,13 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+
 # ------------------------------------------------------------
 # TypeScript
 # ------------------------------------------------------------
 
 *.tsbuildinfo
+
 
 # ------------------------------------------------------------
 # Prisma
@@ -66,9 +72,10 @@ backend/.claude/
 backend/.windsurf/
 
 # Prisma generated client
-# Keep this ignored because it can be regenerated with:
+# Regenerated with:
 # npx prisma generate
 backend/src/generated/
+
 
 # ------------------------------------------------------------
 # Python / AI Service
@@ -82,31 +89,41 @@ __pycache__/
 
 # Virtual environments
 .venv/
+**/.venv/
 venv/
+**/venv/
 env/
+**/env/
 ENV/
+**/ENV/
 
 # Python packaging
 *.egg
 *.egg-info/
-dist/
-build/
 
-# Test / coverage
+# Python test / cache tools
 .pytest_cache/
+**/.pytest_cache/
+
 .mypy_cache/
+**/.mypy_cache/
+
 .ruff_cache/
+**/.ruff_cache/
+
 .coverage
 htmlcov/
 
 # Jupyter
 .ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
 
 # ------------------------------------------------------------
 # AI / ML Generated Files
 # ------------------------------------------------------------
 
-# Model files - usually too large for Git
+# Trained model binaries
 *.pt
 *.pth
 *.ckpt
@@ -126,39 +143,74 @@ htmlcov/
 *.npy
 *.npz
 
-# Local experiment output
+# Experiment output
 experiments/output/
 experiments/results/
+
+# Generic model directories
 models/
 checkpoints/
 artifacts/
+
+# ------------------------------------------------------------
+# NetFault AI model metadata
+# ------------------------------------------------------------
+
+# Keep the NetFault AI models directory visible to Git
+!ai-service/models/
+
+# Keep feature importance metadata in Git
+!ai-service/models/feature_importance.json
+
+# Trained model binaries remain ignored
+ai-service/models/*.joblib
+
 
 # ------------------------------------------------------------
 # Temporary / Generated Data
 # ------------------------------------------------------------
 
 tmp/
+**/tmp/
+
 temp/
+**/temp/
+
 *.tmp
 *.temp
 
-# Network simulator generated data
+
+# ------------------------------------------------------------
+# Network Simulator Generated Data
+# ------------------------------------------------------------
+
 simulator/output/
 simulator/data/
 simulator/logs/
+
+ai-service/simulator/output/
+ai-service/simulator/data/
+ai-service/simulator/logs/
+
 
 # ------------------------------------------------------------
 # IDE / Editors
 # ------------------------------------------------------------
 
 .vscode/
+**/.vscode/
+
 .idea/
+**/.idea/
+
 *.swp
 *.swo
 *~
+
 .project
 .classpath
 .settings/
+
 
 # ------------------------------------------------------------
 # Operating System
@@ -175,8 +227,9 @@ Thumbs.db:encryptable
 ehthumbs.db
 Desktop.ini
 
+
 # ------------------------------------------------------------
-# Frontend specific
+# Frontend Specific
 # ------------------------------------------------------------
 
 frontend/.vite/
@@ -184,50 +237,58 @@ frontend/dist/
 frontend/build/
 frontend/coverage/
 
+
 # ------------------------------------------------------------
-# Backend specific
+# Backend Specific
 # ------------------------------------------------------------
 
 backend/dist/
 backend/build/
 backend/coverage/
 
+
 # ------------------------------------------------------------
-# Local development files
+# Local Development Files
 # ------------------------------------------------------------
 
 *.local
 *.local.*
+
+# Keep example environment files
 !.env.example
 !.env.example.*
 
+
 # ------------------------------------------------------------
-# Docker local overrides
+# Docker Local Overrides
 # ------------------------------------------------------------
 
 docker-compose.override.yml
 docker-compose.local.yml
 
+
 # ------------------------------------------------------------
-# Database local files
+# Database Local Files
 # ------------------------------------------------------------
 
 *.sqlite
 *.sqlite3
 *.db
 
+
 # ------------------------------------------------------------
-# Generated documentation / reports
+# Generated Documentation / Reports
 # ------------------------------------------------------------
 
 reports/generated/
 docs/generated/
 
+
 # ------------------------------------------------------------
-# OS / temporary archives
+# Temporary Archives / Backup Files
 # ------------------------------------------------------------
 
 *.bak
 *.backup
 *.old
-*.origgit restore --staged .
+*.orig
