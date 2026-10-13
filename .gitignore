@@ -149,6 +149,9 @@ experiments/results/
 
 # Generic model directories
 models/
+!ai-service/app/models/
+!ai-service/app/models/*.py
+
 checkpoints/
 artifacts/
 
