@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 import numpy as np
@@ -10,13 +11,19 @@ from app.features import build_features
 from app.models.anomaly import AnomalyDetector
 from app.models.classifier import FaultClassifier
 from app.prediction import build_prediction
+from app.risk import FORECAST_HORIZON_MINUTES
 from app.schemas import PredictResponse, TelemetryPoint
 
 
 class FaultPredictor:
     """
-    Combines feature engineering, anomaly detection,
-    classification, risk calculation, and explanation.
+    Predict future network faults from a telemetry window.
+
+    Detects an active device failure when the two most recent
+    readings both report the device as unavailable.
+
+    Otherwise, the classifier predicts whether a fault will begin
+    within the forecast horizon used during training.
     """
 
     def __init__(
@@ -24,50 +31,86 @@ class FaultPredictor:
         anomaly_detector: AnomalyDetector,
         classifier: FaultClassifier,
         feature_importance: dict[str, float],
+        normal_baseline: dict[str, float],
     ) -> None:
         self.anomaly_detector = anomaly_detector
         self.classifier = classifier
         self.feature_importance = feature_importance
+        self.normal_baseline = normal_baseline
 
     def predict(
         self,
         window: list[TelemetryPoint],
     ) -> PredictResponse:
-        """
-        Generate a complete prediction from a telemetry window.
-        """
+        """Generate an active-fault detection or future prediction."""
 
-        if not window:
+        if len(window) < 15:
             raise ValueError(
-                "Telemetry window cannot be empty"
+                "Telemetry window must contain at least 15 points"
             )
 
-        feature_dict = build_features(
-            window
+        # Ensure all processing uses chronological order.
+        ordered_window = sorted(
+            window,
+            key=lambda point: point.recorded_at,
         )
 
-        feature_names = list(
-            feature_dict.keys()
-        )
+        # --------------------------------------------------
+        # 1. Detect an active device failure.
+        # --------------------------------------------------
+        latest_points = ordered_window[-2:]
+
+        if all(
+            point.availability is not None
+            and point.availability == 0
+            for point in latest_points
+        ):
+            return PredictResponse(
+                faultType="device_failure",
+                riskScore=1.0,
+                predictedWindowMinutes=(
+                    FORECAST_HORIZON_MINUTES
+                ),
+                contributingFeatures={
+                    "availability_current": 0.0,
+                },
+                explanationText=(
+                    "An active device failure is indicated by "
+                    "two consecutive telemetry readings reporting "
+                    "the device as unavailable. Immediate "
+                    "investigation is recommended."
+                ),
+            )
+
+        # --------------------------------------------------
+        # 2. Extract the 35 base features used during training.
+        # --------------------------------------------------
+        feature_dict = build_features(ordered_window)
+        feature_names = list(feature_dict.keys())
 
         feature_array = np.asarray(
-            [
-                feature_dict[name]
-                for name in feature_names
-            ],
+            [feature_dict[name] for name in feature_names],
             dtype=float,
         ).reshape(1, -1)
 
-        anomaly_score = (
+        if not np.isfinite(feature_array).all():
+            raise ValueError(
+                "Extracted telemetry features contain "
+                "NaN or infinite values"
+            )
+
+        # --------------------------------------------------
+        # 3. Calculate the anomaly score.
+        # --------------------------------------------------
+        anomaly_score = float(
             self.anomaly_detector.anomaly_score(
                 feature_array
             )[0]
         )
 
-        feature_dict[
-            "anomaly_score"
-        ] = float(anomaly_score)
+        feature_dict["anomaly_score"] = anomaly_score
 
+        # The classifier expects 35 base features plus anomaly_score.
         classifier_feature_names = (
             feature_names + ["anomaly_score"]
         )
@@ -80,54 +123,73 @@ class FaultPredictor:
             dtype=float,
         ).reshape(1, -1)
 
-        probabilities_array = (
-            self.classifier.predict_proba(
-                classifier_array
-            )[0]
-        )
+        if not np.isfinite(classifier_array).all():
+            raise ValueError(
+                "Classifier input contains NaN or infinite values"
+            )
+
+        # --------------------------------------------------
+        # 4. Predict future faults using the trained classifier.
+        # --------------------------------------------------
+        probabilities_array = self.classifier.predict_proba(
+            classifier_array
+        )[0]
 
         classes = self.classifier.classes()
 
         probabilities = {
-            str(class_name): float(
-                probability
-            )
+            str(class_name): float(probability)
             for class_name, probability in zip(
                 classes,
                 probabilities_array,
             )
         }
 
-        prediction = build_prediction(
-            probabilities
-        )
+        prediction = build_prediction(probabilities)
 
+        # --------------------------------------------------
+        # 5. Explain the prediction.
+        # --------------------------------------------------
         contributors = select_contributors(
-            feature_importance=(
-                self.feature_importance
-            ),
+            feature_importance=self.feature_importance,
             current_features=feature_dict,
             top_n=3,
-        )
-
-        explanation = build_explanation(
-            fault_type=prediction.fault_type,
-            contributors=contributors,
+            normal_baseline=self.normal_baseline,
         )
 
         contributing_features = {
-            contributor.name: contributor.importance
+            contributor.name: float(contributor.importance)
             for contributor in contributors
         }
 
+        if prediction.is_normal:
+            explanation = (
+                "No significant future fault risk is indicated "
+                "by the current telemetry window. "
+                "This does not guarantee that a fault cannot occur."
+            )
+        else:
+            explanation = build_explanation(
+                fault_type=prediction.fault_type,
+                contributors=contributors,
+                risk_score=prediction.risk_score,
+            )
+
+            explanation = (
+                f"Forecast horizon: "
+                f"{FORECAST_HORIZON_MINUTES} minutes. "
+                f"{explanation}"
+            )
+
+        # --------------------------------------------------
+        # 6. Return the future-fault prediction.
+        # --------------------------------------------------
         return PredictResponse(
             faultType=prediction.fault_type,
             riskScore=prediction.risk_score,
             predictedWindowMinutes=(
-                prediction.predicted_window_minutes
+                FORECAST_HORIZON_MINUTES
             ),
-            contributingFeatures=(
-                contributing_features
-            ),
+            contributingFeatures=contributing_features,
             explanationText=explanation,
         )

@@ -1,0 +1,89 @@
+{
+  "task": "future_fault_prediction",
+  "future_horizon_minutes": 30,
+  "window_size": 15,
+  "test_samples": 965,
+  "accuracy": 0.966839378238342,
+  "accuracy_percent": 96.68,
+  "classification_report": {
+    "normal": {
+      "precision": 0.9734693877551021,
+      "recall": 0.9616935483870968,
+      "f1-score": 0.9675456389452333,
+      "support": 496.0
+    },
+    "congestion": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 169.0
+    },
+    "device_failure": {
+      "precision": 0.9379084967320261,
+      "recall": 0.9566666666666667,
+      "f1-score": 0.9471947194719472,
+      "support": 300.0
+    },
+    "accuracy": 0.966839378238342,
+    "macro avg": {
+      "precision": 0.9704592948290426,
+      "recall": 0.9727867383512545,
+      "f1-score": 0.9715801194723935,
+      "support": 965.0
+    },
+    "weighted avg": {
+      "precision": 0.9670604822239777,
+      "recall": 0.966839378238342,
+      "f1-score": 0.9669026453455128,
+      "support": 965.0
+    }
+  },
+  "confusion_matrix": {
+    "labels": [
+      "normal",
+      "congestion",
+      "device_failure"
+    ],
+    "matrix": [
+      [
+        477,
+        0,
+        19
+      ],
+      [
+        0,
+        169,
+        0
+      ],
+      [
+        13,
+        0,
+        287
+      ]
+    ]
+  },
+  "normal_samples": 496,
+  "normal_false_positives": 19,
+  "normal_false_positive_rate": 0.038306451612903226,
+  "normal_false_positive_rate_percent": 3.83,
+  "future_fault_samples": 469,
+  "missed_future_faults": 13,
+  "future_fault_miss_rate": 0.02771855010660981,
+  "training_samples": 3876,
+  "base_feature_count": 35,
+  "classifier_feature_count": 36,
+  "random_seed": 42,
+  "anomaly_contamination": 0.05,
+  "classifier_estimators": 200,
+  "classifier_max_depth": 10,
+  "training_target_distribution": {
+    "normal": 1992,
+    "device_failure": 1130,
+    "congestion": 754
+  },
+  "test_target_distribution": {
+    "normal": 496,
+    "device_failure": 300,
+    "congestion": 169
+  }
+}

@@ -1,9 +1,11 @@
+
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
 
 from simulator.dataset import generate_dataset
+from training.fault_thresholds import find_fault_index
 
 
 BASE_FEATURE_COLUMNS = [
@@ -16,6 +18,11 @@ BASE_FEATURE_COLUMNS = [
     "availability",
 ]
 
+# Forecast whether a fault begins within the next 30 minutes.
+FUTURE_HORIZON_MINUTES = 30
+
+FAULT_LABELS = {"congestion", "device_failure"}
+
 
 def _safe_slope(values: list[float]) -> float:
     if len(values) < 2:
@@ -27,20 +34,43 @@ def _safe_slope(values: list[float]) -> float:
     return float(np.polyfit(x, y, 1)[0])
 
 
+def _episode_fault_type(episode: pd.DataFrame) -> str:
+    """Identify the fault scenario represented by an episode."""
+    labels = (
+        episode["scenario_label"]
+        .astype(str)
+        .str.strip()
+        .str.lower()
+    )
+
+    for label in labels:
+        if label in FAULT_LABELS:
+            return label
+
+    return "normal"
+
+
 def build_training_features(
     data: pd.DataFrame,
     window_size: int = 15,
+    future_horizon_minutes: int = FUTURE_HORIZON_MINUTES,
 ) -> pd.DataFrame:
     """
-    Build leakage-safe rolling features.
+    Build rolling telemetry features with future-onset labels.
 
-    For every telemetry row, only the current row and previous rows
-    from the same episode are used.
+    Features use only the current row and previous rows from the
+    same episode. The target is a fault type if its measured onset
+    occurs within the future horizon; otherwise it is normal.
+
+    Samples at or after fault onset are excluded because this dataset
+    trains a forecasting model, not an active-fault detector.
     """
-
     if window_size <= 0:
+        raise ValueError("window_size must be greater than 0")
+
+    if future_horizon_minutes <= 0:
         raise ValueError(
-            "window_size must be greater than 0"
+            "future_horizon_minutes must be greater than 0"
         )
 
     required_columns = {
@@ -50,19 +80,23 @@ def build_training_features(
         *BASE_FEATURE_COLUMNS,
     }
 
-    missing_columns = required_columns.difference(
-        data.columns
-    )
+    missing_columns = required_columns.difference(data.columns)
 
     if missing_columns:
         raise ValueError(
-            f"Missing required columns: "
-            f"{sorted(missing_columns)}"
+            f"Missing required columns: {sorted(missing_columns)}"
         )
+
+    if data.empty:
+        raise ValueError("Input dataset cannot be empty")
 
     data = data.sort_values(
         ["episode_id", "recorded_at"]
     ).reset_index(drop=True)
+
+    horizon = pd.Timedelta(
+        minutes=future_horizon_minutes
+    )
 
     rows: list[dict[str, float | int | str]] = []
 
@@ -70,25 +104,49 @@ def build_training_features(
         "episode_id",
         sort=False,
     ):
-        episode = episode.reset_index(drop=True)
+        episode = episode.sort_values(
+            "recorded_at"
+        ).reset_index(drop=True)
 
-        for index in range(len(episode)):
-            start = max(
-                0,
-                index - window_size + 1,
-            )
+        fault_type = _episode_fault_type(episode)
 
-            window = episode.iloc[
-                start : index + 1
-            ]
+        fault_index = (
+            find_fault_index(episode, fault_type)
+            if fault_type in FAULT_LABELS
+            else None
+        )
 
-            row = episode.iloc[index]
+        fault_time = (
+            episode.iloc[fault_index]["recorded_at"]
+            if fault_index is not None
+            else None
+        )
+
+        # Inference requires 15 readings, so use complete windows here too.
+        for index in range(window_size - 1, len(episode)):
+            current_row = episode.iloc[index]
+
+            # Never train a future-warning example using readings from
+            # a fault that has already started.
+            if fault_index is not None and index >= fault_index:
+                continue
+
+            start = index - window_size + 1
+            window = episode.iloc[start:index + 1]
+
+            target_label = "normal"
+
+            if fault_time is not None:
+                time_to_fault = (
+                    fault_time - current_row["recorded_at"]
+                )
+
+                if pd.Timedelta(0) < time_to_fault <= horizon:
+                    target_label = fault_type
 
             features: dict[str, float | int | str] = {
                 "episode_id": int(episode_id),
-                "scenario_label": str(
-                    row["scenario_label"]
-                ),
+                "target_label": target_label,
             }
 
             for column in BASE_FEATURE_COLUMNS:
@@ -98,29 +156,21 @@ def build_training_features(
                     .to_numpy()
                 )
 
-                features[f"{column}_current"] = float(
-                    values[-1]
-                )
-
-                features[f"{column}_mean"] = float(
-                    np.mean(values)
-                )
-
-                features[f"{column}_max"] = float(
-                    np.max(values)
-                )
-
-                features[f"{column}_std"] = float(
-                    np.std(values)
-                )
-
-                features[f"{column}_slope"] = (
-                    _safe_slope(
-                        values.tolist()
-                    )
+                features[f"{column}_current"] = float(values[-1])
+                features[f"{column}_mean"] = float(np.mean(values))
+                features[f"{column}_max"] = float(np.max(values))
+                features[f"{column}_std"] = float(np.std(values))
+                features[f"{column}_slope"] = _safe_slope(
+                    values.tolist()
                 )
 
             rows.append(features)
+
+    if not rows:
+        raise ValueError(
+            "No training windows were generated. "
+            "Check dataset duration and window_size."
+        )
 
     return pd.DataFrame(rows)
 
@@ -129,14 +179,15 @@ def prepare_dataset(
     test_size: float = 0.2,
     random_seed: int = 42,
     window_size: int = 15,
+    future_horizon_minutes: int = FUTURE_HORIZON_MINUTES,
+    duration_minutes: int = 60,
 ) -> tuple[
     pd.DataFrame,
     pd.DataFrame,
     pd.Series,
     pd.Series,
 ]:
-    """Prepare a leakage-safe train/test split by episode."""
-
+    """Prepare future-labeled data with a split by episode."""
     if not 0.0 < test_size < 1.0:
         raise ValueError(
             "test_size must be between 0 and 1"
@@ -144,11 +195,13 @@ def prepare_dataset(
 
     data = generate_dataset(
         random_seed=random_seed,
+        duration_minutes=duration_minutes,
     )
 
     feature_data = build_training_features(
         data,
         window_size=window_size,
+        future_horizon_minutes=future_horizon_minutes,
     )
 
     episode_ids = (
@@ -159,9 +212,7 @@ def prepare_dataset(
 
     rng = np.random.default_rng(random_seed)
 
-    shuffled_episode_ids = rng.permutation(
-        episode_ids
-    )
+    shuffled_episode_ids = rng.permutation(episode_ids)
 
     test_count = max(
         1,
@@ -172,46 +223,34 @@ def prepare_dataset(
         shuffled_episode_ids[:test_count]
     )
 
-    train_mask = ~feature_data[
-        "episode_id"
-    ].isin(test_episode_ids)
-
-    test_mask = feature_data[
-        "episode_id"
-    ].isin(test_episode_ids)
+    test_mask = feature_data["episode_id"].isin(
+        test_episode_ids
+    )
 
     train_data = feature_data.loc[
-        train_mask
+        ~test_mask
     ].reset_index(drop=True)
 
     test_data = feature_data.loc[
         test_mask
     ].reset_index(drop=True)
 
+    metadata_columns = {
+        "episode_id",
+        "target_label",
+    }
+
     feature_columns = [
         column
         for column in feature_data.columns
-        if column not in {
-            "episode_id",
-            "scenario_label",
-        }
+        if column not in metadata_columns
     ]
 
-    x_train = train_data[
-        feature_columns
-    ].copy()
+    x_train = train_data[feature_columns].copy()
+    x_test = test_data[feature_columns].copy()
 
-    x_test = test_data[
-        feature_columns
-    ].copy()
-
-    y_train = train_data[
-        "scenario_label"
-    ].copy()
-
-    y_test = test_data[
-        "scenario_label"
-    ].copy()
+    y_train = train_data["target_label"].copy()
+    y_test = test_data["target_label"].copy()
 
     return (
         x_train,

@@ -58,6 +58,15 @@ export async function generatePrediction(
     throw new Error("Explanation text is required");
   }
 
+  /*
+   * Normal operation is not a fault prediction.
+   * Do not store it in the database or create an alert.
+   */
+  if (result.faultType === "normal") {
+    return null;
+  }
+
+  const faultType: FaultType = result.faultType;
   const severity = getSeverity(result.riskScore);
 
   const device = await prisma.device.findUnique({
@@ -77,13 +86,12 @@ export async function generatePrediction(
   return prisma.$transaction(async (tx) => {
     /*
      * A Prediction represents the AI's prediction.
-     *
-     * It does NOT mean that the fault has actually happened.
+     * It does not mean that the fault has actually happened.
      */
     const prediction = await tx.prediction.create({
       data: {
         deviceId,
-        faultType: result.faultType,
+        faultType,
         riskScore: result.riskScore,
         severity,
         predictedWindowMinutes: result.predictedWindowMinutes,
@@ -94,10 +102,7 @@ export async function generatePrediction(
     });
 
     /*
-     * Alert threshold:
-     * risk >= 0.6
-     *
-     * Deduplication will be added separately.
+     * Create alerts only when risk is at least 0.6.
      */
     let alert = null;
 
@@ -107,7 +112,7 @@ export async function generatePrediction(
           deviceId,
           acknowledged: false,
           prediction: {
-            faultType: result.faultType,
+            faultType,
           },
         },
         orderBy: {
@@ -120,11 +125,7 @@ export async function generatePrediction(
           data: {
             predictionId: prediction.id,
             deviceId,
-            message: getAlertMessage(
-              result.faultType,
-              severity,
-              result.riskScore,
-            ),
+            message: getAlertMessage(faultType, severity, result.riskScore),
             severity,
             acknowledged: false,
           },
@@ -133,12 +134,8 @@ export async function generatePrediction(
     }
 
     /*
-     * IMPORTANT:
-     *
-     * No Fault is created here.
-     *
-     * A Fault represents an actual fault occurrence and will be
-     * created later by the simulator / actual-fault flow.
+     * Actual Fault records are created separately by
+     * the simulator / actual-fault flow.
      */
     return {
       prediction,

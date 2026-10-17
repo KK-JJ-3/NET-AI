@@ -73,17 +73,33 @@ export async function createTelemetry(
     let prediction = null;
 
     try {
-      const recentTelemetry = await prisma.telemetry.findMany({
+      const telemetryCount = await prisma.telemetry.count({
         where: {
           deviceId,
         },
-        orderBy: {
-          recordedAt: "desc",
-        },
-        take: 15,
       });
 
-      if (recentTelemetry.length >= 15) {
+      // First prediction at 15 records, then every 5 records.
+      const shouldScore =
+        telemetryCount >= 15 && (telemetryCount - 15) % 5 === 0;
+
+      if (shouldScore) {
+        const recentTelemetry = await prisma.telemetry.findMany({
+          where: {
+            deviceId,
+          },
+          orderBy: [
+            {
+              recordedAt: "desc",
+            },
+            {
+              id: "desc",
+            },
+          ],
+          take: 15,
+        });
+
+        // Send telemetry to the AI service in chronological order.
         const aiWindow = recentTelemetry
           .slice()
           .reverse()
@@ -103,6 +119,7 @@ export async function createTelemetry(
         prediction = await generatePrediction(deviceId, aiResult);
       }
     } catch (scoringError) {
+      // Preserve telemetry ingestion if AI scoring fails.
       console.error(
         `Telemetry scoring failed for device ${deviceId}:`,
         scoringError,
@@ -153,6 +170,10 @@ export async function getDeviceTelemetry(
     }
 
     const minutes = rangeMinutes[range];
+
+    if (minutes === undefined) {
+      return sendError(res, "Invalid range. Use 1h, 6h, or 24h.", 400);
+    }
 
     const startTime = new Date(Date.now() - minutes * 60 * 1000);
 

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 
 
@@ -29,66 +30,27 @@ class ScenarioConfig:
     label: ScenarioLabel
     duration_minutes: int = 30
     interval_seconds: int = 60
-
-    # Controls how quickly the scenario degrades.
     degradation_speed: float = 1.0
-
-    # Controls how severe the final degradation becomes.
     degradation_magnitude: float = 1.0
-
-    # For device failure, determines when the actual failure occurs.
     fault_start_ratio: float = 0.8
 
 
-def _clamp(
-    value: float,
-    minimum: float,
-    maximum: float,
-) -> float:
+def _clamp(value: float, minimum: float, maximum: float) -> float:
     return max(minimum, min(value, maximum))
-
-
-def _validate_config(config: ScenarioConfig) -> None:
-    if config.duration_minutes <= 0:
-        raise ValueError(
-            "duration_minutes must be greater than 0"
-        )
-
-    if config.interval_seconds <= 0:
-        raise ValueError(
-            "interval_seconds must be greater than 0"
-        )
-
-    if config.degradation_speed <= 0:
-        raise ValueError(
-            "degradation_speed must be greater than 0"
-        )
-
-    if config.degradation_magnitude <= 0:
-        raise ValueError(
-            "degradation_magnitude must be greater than 0"
-        )
-
-    if not 0.0 < config.fault_start_ratio <= 1.0:
-        raise ValueError(
-            "fault_start_ratio must be between 0 and 1"
-        )
 
 
 def generate_normal_sample(
     recorded_at: datetime,
-    step: int,
+    rng: random.Random,
 ) -> TelemetrySample:
-    """Generate stable network telemetry."""
-
     return TelemetrySample(
         recorded_at=recorded_at,
-        latency_ms=40.0,
-        packet_loss_pct=1.0,
-        jitter_ms=5.0,
-        utilization_pct=50.0,
-        cpu_pct=40.0,
-        memory_pct=55.0,
+        latency_ms=_clamp(rng.gauss(30, 4), 5, 100),
+        packet_loss_pct=_clamp(rng.gauss(0.4, 0.15), 0, 5),
+        jitter_ms=_clamp(rng.gauss(3.5, 0.8), 0, 20),
+        utilization_pct=_clamp(rng.gauss(40, 8), 5, 85),
+        cpu_pct=_clamp(rng.gauss(35, 8), 5, 85),
+        memory_pct=_clamp(rng.gauss(50, 7), 10, 90),
         availability=1,
         scenario_label=ScenarioLabel.NORMAL,
     )
@@ -96,83 +58,30 @@ def generate_normal_sample(
 
 def generate_congestion_sample(
     recorded_at: datetime,
-    step: int,
-    total_steps: int,
-    degradation_speed: float = 1.0,
-    degradation_magnitude: float = 1.0,
+    progress: float,
+    degradation_magnitude: float,
 ) -> TelemetrySample:
-    """Generate gradually worsening congestion telemetry."""
+    progress = _clamp(progress, 0.0, 1.0)
+    magnitude = max(0.0, degradation_magnitude)
 
-    base_progress = step / max(total_steps - 1, 1)
+    # Gradually introduce stronger congestion as the episode progresses.
+    fault_progress = _clamp((progress - 0.55) / 0.25, 0.0, 1.0)
 
-    progress = _clamp(
-        base_progress * degradation_speed,
-        0.0,
-        1.0,
-    )
-
-    latency = 40.0 + (
-        80.0
-        * degradation_magnitude
-        * progress
-    )
-
-    packet_loss = 1.0 + (
-        9.0
-        * degradation_magnitude
-        * progress
-    )
-
-    jitter = 5.0 + (
-        25.0
-        * degradation_magnitude
-        * progress
-    )
-
-    utilization = 50.0 + (
-        48.0
-        * degradation_magnitude
-        * progress
-    )
-
-    cpu = 40.0 + (
-        45.0
-        * degradation_magnitude
-        * progress
-    )
-
-    memory = 55.0 + (
-        35.0
-        * degradation_magnitude
-        * progress
-    )
+    latency = 40 + 45 * magnitude * progress + 70 * fault_progress
+    utilization = 50 + 25 * magnitude * progress + 45 * fault_progress
+    packet_loss = 1 + 9 * magnitude * progress
+    jitter = 5 + 25 * magnitude * progress
+    cpu = 40 + 45 * magnitude * progress
+    memory = 55 + 35 * magnitude * progress
 
     return TelemetrySample(
         recorded_at=recorded_at,
-        latency_ms=round(
-            _clamp(latency, 0.0, 500.0),
-            3,
-        ),
-        packet_loss_pct=round(
-            _clamp(packet_loss, 0.0, 100.0),
-            3,
-        ),
-        jitter_ms=round(
-            _clamp(jitter, 0.0, 200.0),
-            3,
-        ),
-        utilization_pct=round(
-            _clamp(utilization, 0.0, 100.0),
-            3,
-        ),
-        cpu_pct=round(
-            _clamp(cpu, 0.0, 100.0),
-            3,
-        ),
-        memory_pct=round(
-            _clamp(memory, 0.0, 100.0),
-            3,
-        ),
+        latency_ms=_clamp(latency, 1, 250),
+        packet_loss_pct=_clamp(packet_loss, 0, 100),
+        jitter_ms=_clamp(jitter, 0, 100),
+        utilization_pct=_clamp(utilization, 0, 100),
+        cpu_pct=_clamp(cpu, 0, 100),
+        memory_pct=_clamp(memory, 0, 100),
         availability=1,
         scenario_label=ScenarioLabel.CONGESTION,
     )
@@ -180,91 +89,35 @@ def generate_congestion_sample(
 
 def generate_device_failure_sample(
     recorded_at: datetime,
-    step: int,
-    total_steps: int,
-    degradation_speed: float = 1.0,
-    degradation_magnitude: float = 1.0,
-    fault_start_ratio: float = 0.8,
+    progress: float,
+    fault_start_ratio: float,
+    degradation_magnitude: float,
 ) -> TelemetrySample:
-    """Generate telemetry that progressively leads to device failure."""
+    progress = _clamp(progress, 0.0, 1.0)
+    magnitude = max(0.0, degradation_magnitude)
 
-    base_progress = step / max(total_steps - 1, 1)
-
-    progress = _clamp(
-        base_progress * degradation_speed,
-        0.0,
-        1.0,
-    )
-
-    latency = 40.0 + (
-        60.0
-        * degradation_magnitude
-        * progress
-    )
-
-    packet_loss = 1.0 + (
-        5.0
-        * degradation_magnitude
-        * progress
-    )
-
-    jitter = 5.0 + (
-        15.0
-        * degradation_magnitude
-        * progress
-    )
-
-    utilization = 50.0 + (
-        20.0
-        * degradation_magnitude
-        * progress
-    )
-
-    cpu = 40.0 + (
-        25.0
-        * degradation_magnitude
-        * progress
-    )
-
-    memory = 55.0 + (
-        25.0
-        * degradation_magnitude
-        * progress
-    )
+    latency = 40 + 35 * magnitude * progress
+    packet_loss = 1 + 4 * magnitude * progress
+    jitter = 5 + 12 * magnitude * progress
+    utilization = 50 + 20 * magnitude * progress
+    cpu = 40 + 30 * magnitude * progress
+    memory = 55 + 25 * magnitude * progress
 
     availability = 1
 
-    if base_progress >= fault_start_ratio:
+    if progress >= fault_start_ratio:
         availability = 0
-        latency = 0.0
-        packet_loss = 100.0
+        latency = 0
+        packet_loss = 100
 
     return TelemetrySample(
         recorded_at=recorded_at,
-        latency_ms=round(
-            _clamp(latency, 0.0, 500.0),
-            3,
-        ),
-        packet_loss_pct=round(
-            _clamp(packet_loss, 0.0, 100.0),
-            3,
-        ),
-        jitter_ms=round(
-            _clamp(jitter, 0.0, 200.0),
-            3,
-        ),
-        utilization_pct=round(
-            _clamp(utilization, 0.0, 100.0),
-            3,
-        ),
-        cpu_pct=round(
-            _clamp(cpu, 0.0, 100.0),
-            3,
-        ),
-        memory_pct=round(
-            _clamp(memory, 0.0, 100.0),
-            3,
-        ),
+        latency_ms=_clamp(latency, 0, 250),
+        packet_loss_pct=_clamp(packet_loss, 0, 100),
+        jitter_ms=_clamp(jitter, 0, 100),
+        utilization_pct=_clamp(utilization, 0, 100),
+        cpu_pct=_clamp(cpu, 0, 100),
+        memory_pct=_clamp(memory, 0, 100),
         availability=availability,
         scenario_label=ScenarioLabel.DEVICE_FAILURE,
     )
@@ -274,54 +127,80 @@ def generate_scenario(
     config: ScenarioConfig,
     start_time: datetime,
 ) -> list[TelemetrySample]:
-    """Generate a complete deterministic telemetry episode."""
+    if config.duration_minutes <= 0:
+        raise ValueError("duration_minutes must be positive")
 
-    _validate_config(config)
+    if config.interval_seconds <= 0:
+        raise ValueError("interval_seconds must be positive")
 
-    total_seconds = (
-        config.duration_minutes * 60
-    )
+    if config.degradation_speed <= 0:
+        raise ValueError("degradation_speed must be positive")
+
+    if config.degradation_magnitude < 0:
+        raise ValueError("degradation_magnitude cannot be negative")
+
+    if not 0 <= config.fault_start_ratio <= 1:
+        raise ValueError("fault_start_ratio must be between 0 and 1")
 
     total_steps = (
-        total_seconds // config.interval_seconds
+        config.duration_minutes * 60 // config.interval_seconds
     ) + 1
+
+    seed = (
+        int(start_time.timestamp())
+        + sum(ord(char) for char in config.label.value)
+        + config.duration_minutes
+        + config.interval_seconds
+    )
+    rng = random.Random(seed)
+
+    recovery_start_ratio = {
+        ScenarioLabel.NORMAL: 1.1,
+        ScenarioLabel.CONGESTION: 0.8,
+        ScenarioLabel.DEVICE_FAILURE: 0.98,
+    }[config.label]
 
     samples: list[TelemetrySample] = []
 
     for step in range(total_steps):
-        recorded_at = start_time + timedelta(
-            seconds=step * config.interval_seconds
+        base_progress = step / (total_steps - 1) if total_steps > 1 else 1.0
+
+        # Congestion must reach its detectable peak before recovery.
+        effective_speed = config.degradation_speed
+        if config.label == ScenarioLabel.CONGESTION:
+            effective_speed = max(effective_speed, 1.25)
+
+        progress = min(1.0, base_progress * effective_speed)
+
+        recovering = (
+            config.label != ScenarioLabel.NORMAL
+            and base_progress > recovery_start_ratio
         )
 
-        if config.label == ScenarioLabel.NORMAL:
-            sample = generate_normal_sample(
-                recorded_at,
-                step,
-            )
+        recorded_at = start_time.replace() + __import__(
+            "datetime"
+        ).timedelta(seconds=step * config.interval_seconds)
+
+        if config.label == ScenarioLabel.NORMAL or recovering:
+            sample = generate_normal_sample(recorded_at, rng)
 
         elif config.label == ScenarioLabel.CONGESTION:
             sample = generate_congestion_sample(
                 recorded_at=recorded_at,
-                step=step,
-                total_steps=total_steps,
-                degradation_speed=config.degradation_speed,
+                progress=progress,
                 degradation_magnitude=config.degradation_magnitude,
             )
 
         elif config.label == ScenarioLabel.DEVICE_FAILURE:
             sample = generate_device_failure_sample(
                 recorded_at=recorded_at,
-                step=step,
-                total_steps=total_steps,
-                degradation_speed=config.degradation_speed,
-                degradation_magnitude=config.degradation_magnitude,
+                progress=base_progress,
                 fault_start_ratio=config.fault_start_ratio,
+                degradation_magnitude=config.degradation_magnitude,
             )
 
         else:
-            raise ValueError(
-                f"Unsupported scenario: {config.label}"
-            )
+            raise ValueError(f"Unsupported scenario label: {config.label}")
 
         samples.append(sample)
 

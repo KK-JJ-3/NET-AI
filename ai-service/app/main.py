@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 import json
@@ -27,21 +28,19 @@ FEATURE_IMPORTANCE_PATH = (
     MODEL_DIR / "feature_importance.json"
 )
 
+NORMAL_BASELINE_PATH = (
+    MODEL_DIR / "normal_baseline.json"
+)
+
 
 def load_predictor() -> FaultPredictor:
-    """Load persisted ML models and create the predictor."""
+    """Load persisted models and explanation metadata."""
 
     anomaly_detector = AnomalyDetector()
-
-    anomaly_detector.load(
-        ANOMALY_MODEL_PATH
-    )
+    anomaly_detector.load(ANOMALY_MODEL_PATH)
 
     classifier = FaultClassifier()
-
-    classifier.load(
-        CLASSIFIER_MODEL_PATH
-    )
+    classifier.load(CLASSIFIER_MODEL_PATH)
 
     if not FEATURE_IMPORTANCE_PATH.exists():
         raise FileNotFoundError(
@@ -55,10 +54,23 @@ def load_predictor() -> FaultPredictor:
     ) as file:
         feature_importance = json.load(file)
 
+    if not NORMAL_BASELINE_PATH.exists():
+        raise FileNotFoundError(
+            "Normal baseline file not found: "
+            f"{NORMAL_BASELINE_PATH}"
+        )
+
+    with NORMAL_BASELINE_PATH.open(
+        "r",
+        encoding="utf-8",
+    ) as file:
+        normal_baseline = json.load(file)
+
     return FaultPredictor(
         anomaly_detector=anomaly_detector,
         classifier=classifier,
         feature_importance=feature_importance,
+        normal_baseline=normal_baseline,
     )
 
 
@@ -66,7 +78,6 @@ app = FastAPI(
     title="NetFault AI Service",
     version="1.0.0",
 )
-
 
 predictor = load_predictor()
 
@@ -87,9 +98,7 @@ def predict(
     request: PredictRequest,
 ):
     try:
-        return predictor.predict(
-            request.window
-        )
+        return predictor.predict(request.window)
 
     except ValueError as error:
         raise HTTPException(

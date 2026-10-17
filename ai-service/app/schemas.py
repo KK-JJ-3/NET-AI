@@ -1,10 +1,11 @@
+
 from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-FaultType = Literal["congestion", "device_failure"]
+FaultType = Literal["normal", "congestion", "device_failure"]
 
 
 class TelemetryPoint(BaseModel):
@@ -17,7 +18,11 @@ class TelemetryPoint(BaseModel):
     utilization_pct: float | None = Field(default=None, alias="utilizationPct")
     cpu_pct: float | None = Field(default=None, alias="cpuPct")
     memory_pct: float | None = Field(default=None, alias="memoryPct")
-    availability: float | None = None
+    availability: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
 
 
 class PredictRequest(BaseModel):
