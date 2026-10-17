@@ -974,3 +974,346 @@
     transition: none;
   }
 }
+
+.prediction-contributors {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.prediction-contributor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border-color, #303030);
+  background: var(--surface-color, #111111);
+}
+
+.prediction-contributor-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  color: #aaff00;
+  background: rgb(170 255 0 / 8%);
+}
+
+.prediction-contributor-content {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.prediction-contributor-content span {
+  color: #9a9a9a;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.prediction-contributor-content strong {
+  color: #f5f5f5;
+  font-size: 20px;
+}
+
+.prediction-ai-explanation {
+  padding: 20px;
+  border-left: 3px solid #aaff00;
+  background: rgb(170 255 0 / 5%);
+}
+
+.prediction-ai-explanation p {
+  margin: 12px 0 0;
+  color: #d0d0d0;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+/* AI explanation and contributing factors */
+
+.prediction-ai-risk {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border-color, #303030);
+  background: var(--surface-color, #111111);
+}
+
+.prediction-ai-risk-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  color: #aaff00;
+  background: rgb(170 255 0 / 9%);
+}
+
+.prediction-ai-risk-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.prediction-ai-risk-copy > span {
+  color: #999;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.prediction-ai-risk-copy > strong {
+  color: #aaff00;
+  font-size: 26px;
+  line-height: 1.2;
+}
+
+.prediction-ai-risk-copy > p {
+  margin: 0;
+  color: #b3b3b3;
+  font-size: 13px;
+}
+
+.prediction-ai-severity {
+  margin-left: auto;
+  padding: 7px 10px;
+  border: 1px solid currentColor;
+  color: #b8b8b8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.prediction-ai-severity.critical,
+.prediction-ai-severity.high {
+  color: #ff525c;
+}
+
+.prediction-ai-severity.medium {
+  color: #ffbd4a;
+}
+
+.prediction-ai-severity.low {
+  color: #aaff00;
+}
+
+.prediction-contributors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.prediction-contributor {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--border-color, #303030);
+  background: var(--surface-color, #111111);
+}
+
+.prediction-contributor-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  color: #aaff00;
+  background: rgb(170 255 0 / 8%);
+}
+
+.prediction-contributor-content {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.prediction-contributor-label {
+  color: #aaa;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.prediction-contributor-content > strong {
+  color: #f5f5f5;
+  font-size: 24px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.prediction-threshold {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.prediction-threshold svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.prediction-threshold.exceeded {
+  color: #ff626b;
+}
+
+.prediction-threshold.observed {
+  color: #aaff00;
+}
+
+.prediction-contributor-note {
+  color: #999;
+  font-size: 12px;
+}
+
+.prediction-ai-explanation {
+  padding: 22px;
+  border-left: 3px solid #aaff00;
+  background: rgb(170 255 0 / 5%);
+}
+
+.prediction-ai-explanation p {
+  margin: 12px 0 0;
+  color: #dedede;
+  font-size: 14px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.prediction-ai-footnote {
+  margin: 14px 0 0;
+  color: #8f8f8f;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.prediction-no-contributors {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px;
+  margin-bottom: 20px;
+  border: 1px dashed #3b3b3b;
+  color: #aaa;
+}
+
+.prediction-no-contributors svg {
+  flex-shrink: 0;
+  color: #aaff00;
+}
+
+.prediction-no-contributors p {
+  margin: 0;
+  line-height: 1.7;
+}
+
+/* Responsive layout */
+
+@media (max-width: 720px) {
+  .prediction-ai-risk {
+    flex-wrap: wrap;
+    padding: 16px;
+  }
+
+  .prediction-ai-severity {
+    margin-left: 0;
+  }
+
+  .prediction-contributors {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .prediction-contributor {
+    padding: 16px;
+  }
+
+  .prediction-ai-explanation {
+    padding: 17px;
+  }
+}
+
+@media (max-width: 420px) {
+  .prediction-ai-risk-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .prediction-ai-risk-copy > strong {
+    font-size: 23px;
+  }
+
+  .prediction-contributor-content > strong {
+    font-size: 21px;
+  }
+}
+
+/* AI explanation layout fix — preserve all existing page styles */
+
+.prediction-detail-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.prediction-detail-placeholder > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.prediction-contributors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  width: 100%;
+  margin: 0;
+}
+
+.prediction-contributor {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.prediction-contributor-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.prediction-contributor-label,
+.prediction-contributor-content strong {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.prediction-ai-risk,
+.prediction-ai-explanation {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 650px) {
+  .prediction-contributors {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
