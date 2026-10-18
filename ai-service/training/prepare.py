@@ -18,8 +18,8 @@ BASE_FEATURE_COLUMNS = [
     "availability",
 ]
 
-# Forecast whether a fault begins within the next 30 minutes.
-FUTURE_HORIZON_MINUTES = 30
+# Forecast whether a fault begins within the next 10 minutes.
+FUTURE_HORIZON_MINUTES = 10
 
 FAULT_LABELS = {"congestion", "device_failure"}
 

@@ -25,9 +25,7 @@ export async function createTelemetry(
     } = req.body;
 
     const device = await prisma.device.findUnique({
-      where: {
-        id: deviceId,
-      },
+      where: { id: deviceId },
     });
 
     if (!device) {
@@ -36,9 +34,7 @@ export async function createTelemetry(
 
     if (interfaceId !== undefined && interfaceId !== null) {
       const networkInterface = await prisma.interface.findUnique({
-        where: {
-          id: interfaceId,
-        },
+        where: { id: interfaceId },
       });
 
       if (!networkInterface) {
@@ -74,32 +70,23 @@ export async function createTelemetry(
 
     try {
       const telemetryCount = await prisma.telemetry.count({
-        where: {
-          deviceId,
-        },
+        where: { deviceId },
       });
 
       // First prediction at 15 records, then every 5 records.
+      // Also score immediately when a new reading reports an outage.
       const shouldScore =
-        telemetryCount >= 15 && (telemetryCount - 15) % 5 === 0;
+        telemetryCount >= 15 &&
+        ((telemetryCount - 15) % 5 === 0 || telemetry.availability === false);
 
       if (shouldScore) {
         const recentTelemetry = await prisma.telemetry.findMany({
-          where: {
-            deviceId,
-          },
-          orderBy: [
-            {
-              recordedAt: "desc",
-            },
-            {
-              id: "desc",
-            },
-          ],
+          where: { deviceId },
+          orderBy: [{ recordedAt: "desc" }, { id: "desc" }],
           take: 15,
         });
 
-        // Send telemetry to the AI service in chronological order.
+        // Send readings to the AI service in chronological order.
         const aiWindow = recentTelemetry
           .slice()
           .reverse()
@@ -111,12 +98,26 @@ export async function createTelemetry(
             utilizationPct: item.utilizationPct,
             cpuPct: item.cpuPct,
             memoryPct: item.memoryPct,
-            availability: item.availability ? 1 : 0,
+            // Preserve unknown availability as null.
+            availability:
+              item.availability === null ? null : item.availability ? 1 : 0,
           }));
 
         const aiResult = await predictFault(deviceId, aiWindow);
 
-        prediction = await generatePrediction(deviceId, aiResult);
+        // Anchor the prediction to the newest reading used by the model,
+        // not the database server's current time.
+        const predictionTimestamp = recentTelemetry[0]?.recordedAt;
+
+        if (!predictionTimestamp) {
+          throw new Error("No telemetry timestamp available for prediction");
+        }
+
+        prediction = await generatePrediction(
+          deviceId,
+          aiResult,
+          predictionTimestamp,
+        );
       }
     } catch (scoringError) {
       // Preserve telemetry ingestion if AI scoring fails.
@@ -126,17 +127,9 @@ export async function createTelemetry(
       );
     }
 
-    return sendSuccess(
-      res,
-      {
-        telemetry,
-        prediction,
-      },
-      201,
-    );
+    return sendSuccess(res, { telemetry, prediction }, 201);
   } catch (error) {
     console.error("Failed to create telemetry:", error);
-
     return sendError(res, "Failed to create telemetry", 500);
   }
 }
@@ -156,13 +149,8 @@ export async function getDeviceTelemetry(
 
   try {
     const device = await prisma.device.findUnique({
-      where: {
-        id: deviceId,
-      },
-      select: {
-        id: true,
-        name: true,
-      },
+      where: { id: deviceId },
+      select: { id: true, name: true },
     });
 
     if (!device) {
@@ -180,23 +168,14 @@ export async function getDeviceTelemetry(
     const telemetry = await prisma.telemetry.findMany({
       where: {
         deviceId,
-        recordedAt: {
-          gte: startTime,
-        },
+        recordedAt: { gte: startTime },
       },
-      orderBy: {
-        recordedAt: "asc",
-      },
+      orderBy: { recordedAt: "asc" },
     });
 
-    return sendSuccess(res, {
-      device,
-      range,
-      telemetry,
-    });
+    return sendSuccess(res, { device, range, telemetry });
   } catch (error) {
     console.error("Failed to fetch device telemetry:", error);
-
     return sendError(res, "Failed to fetch device telemetry", 500);
   }
 }

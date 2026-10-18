@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 # This must match the horizon used by training/prepare.py
 # and training/train_models.py.
-FORECAST_HORIZON_MINUTES = 30
+FORECAST_HORIZON_MINUTES = 10
 
 
 @dataclass(frozen=True)

@@ -341,7 +341,7 @@ def main():
             "duration_minutes": DURATION_MINUTES,
             "interval_seconds": INTERVAL_SECONDS,
             "window_size": WINDOW_SIZE,
-            "forecast_horizon_minutes": 30,
+            "forecast_horizon_minutes": 10,
             "warning_threshold": WARNING_THRESHOLD,
             "total_windows_tested": total_windows,
 

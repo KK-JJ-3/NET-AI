@@ -5,18 +5,9 @@ type FaultType = "congestion" | "device_failure";
 type Severity = "low" | "medium" | "high" | "critical";
 
 function getSeverity(riskScore: number): Severity {
-  if (riskScore >= 0.8) {
-    return "critical";
-  }
-
-  if (riskScore >= 0.6) {
-    return "high";
-  }
-
-  if (riskScore >= 0.4) {
-    return "medium";
-  }
-
+  if (riskScore >= 0.8) return "critical";
+  if (riskScore >= 0.6) return "high";
+  if (riskScore >= 0.4) return "medium";
   return "low";
 }
 
@@ -34,9 +25,14 @@ function getAlertMessage(
 export async function generatePrediction(
   deviceId: number,
   result: AiPredictionResult,
+  predictedAt: Date = new Date(),
 ) {
   if (!Number.isInteger(deviceId) || deviceId <= 0) {
     throw new Error("Invalid device ID");
+  }
+
+  if (!(predictedAt instanceof Date) || Number.isNaN(predictedAt.getTime())) {
+    throw new Error("Invalid prediction timestamp");
   }
 
   if (
@@ -54,14 +50,14 @@ export async function generatePrediction(
     throw new Error("Prediction window must be a positive integer");
   }
 
-  if (!result.explanationText.trim()) {
+  if (
+    typeof result.explanationText !== "string" ||
+    !result.explanationText.trim()
+  ) {
     throw new Error("Explanation text is required");
   }
 
-  /*
-   * Normal operation is not a fault prediction.
-   * Do not store it in the database or create an alert.
-   */
+  // Normal operation is not a fault prediction.
   if (result.faultType === "normal") {
     return null;
   }
@@ -70,13 +66,8 @@ export async function generatePrediction(
   const severity = getSeverity(result.riskScore);
 
   const device = await prisma.device.findUnique({
-    where: {
-      id: deviceId,
-    },
-    select: {
-      id: true,
-      name: true,
-    },
+    where: { id: deviceId },
+    select: { id: true },
   });
 
   if (!device) {
@@ -84,10 +75,6 @@ export async function generatePrediction(
   }
 
   return prisma.$transaction(async (tx) => {
-    /*
-     * A Prediction represents the AI's prediction.
-     * It does not mean that the fault has actually happened.
-     */
     const prediction = await tx.prediction.create({
       data: {
         deviceId,
@@ -98,26 +85,21 @@ export async function generatePrediction(
         explanationText: result.explanationText,
         contributingFeatures: result.contributingFeatures,
         status: "pending",
+        predictedAt,
       },
     });
 
-    /*
-     * Create alerts only when risk is at least 0.6.
-     */
     let alert = null;
 
+    // Create alerts only when risk is at least 0.6.
     if (result.riskScore >= 0.6) {
       const existingActiveAlert = await tx.alert.findFirst({
         where: {
           deviceId,
           acknowledged: false,
-          prediction: {
-            faultType,
-          },
+          prediction: { faultType },
         },
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: { createdAt: "desc" },
       });
 
       if (!existingActiveAlert) {
@@ -133,13 +115,6 @@ export async function generatePrediction(
       }
     }
 
-    /*
-     * Actual Fault records are created separately by
-     * the simulator / actual-fault flow.
-     */
-    return {
-      prediction,
-      alert,
-    };
+    return { prediction, alert };
   });
 }

@@ -1,14 +1,22 @@
 import prisma from "../config/database.js";
 
-export async function evaluatePrediction(predictionId: number) {
+export async function evaluatePrediction(
+  predictionId: number,
+  referenceTime: Date = new Date(),
+) {
   if (!Number.isInteger(predictionId) || predictionId <= 0) {
     throw new Error("Invalid prediction ID");
   }
 
+  if (
+    !(referenceTime instanceof Date) ||
+    Number.isNaN(referenceTime.getTime())
+  ) {
+    throw new Error("Invalid evaluation reference time");
+  }
+
   const prediction = await prisma.prediction.findUnique({
-    where: {
-      id: predictionId,
-    },
+    where: { id: predictionId },
     select: {
       id: true,
       deviceId: true,
@@ -17,9 +25,7 @@ export async function evaluatePrediction(predictionId: number) {
       predictedAt: true,
       status: true,
       outcomes: {
-        select: {
-          id: true,
-        },
+        select: { id: true },
         take: 1,
       },
     },
@@ -29,113 +35,63 @@ export async function evaluatePrediction(predictionId: number) {
     throw new Error("Prediction not found");
   }
 
-  /*
-   * Do not evaluate a prediction more than once.
-   */
   if (prediction.outcomes.length > 0) {
     throw new Error("Prediction has already been evaluated");
   }
 
-  /*
-   * Only pending predictions should be evaluated.
-   */
   if (prediction.status !== "pending") {
     throw new Error("Prediction is not pending");
   }
 
   const windowEnd = new Date(
     prediction.predictedAt.getTime() +
-      prediction.predictedWindowMinutes * 60 * 1000,
+      prediction.predictedWindowMinutes * 60_000,
   );
 
-  /*
-   * The prediction cannot be evaluated until its predicted window
-   * has expired.
-   */
-  if (new Date() < windowEnd) {
+  if (referenceTime < windowEnd) {
     throw new Error("Prediction window has not expired");
   }
 
-  /*
-   * Find an actual fault matching:
-   * - same device
-   * - same fault type
-   * - fault started during the prediction window
-   */
   const actualFault = await prisma.fault.findFirst({
     where: {
       deviceId: prediction.deviceId,
       faultType: prediction.faultType,
-      status: {
-        in: ["confirmed", "resolved"],
-      },
+      status: { in: ["confirmed", "resolved"] },
       startedAt: {
-        gte: prediction.predictedAt,
+        gt: prediction.predictedAt,
         lte: windowEnd,
       },
     },
-    orderBy: {
-      startedAt: "asc",
-    },
+    orderBy: { startedAt: "asc" },
   });
 
-  if (actualFault) {
-    const outcome = await prisma.$transaction(async (tx) => {
-      const predictionOutcome = await tx.predictionOutcome.create({
-        data: {
-          predictionId: prediction.id,
-          faultId: actualFault.id,
-          outcome: "confirmed",
-          notes: "Matching actual fault occurred within the prediction window.",
-        },
-      });
+  return prisma.$transaction(async (tx) => {
+    const confirmed = actualFault !== null;
 
-      await tx.prediction.update({
-        where: {
-          id: prediction.id,
-        },
-        data: {
-          status: "confirmed",
-        },
-      });
-
-      return predictionOutcome;
-    });
-
-    return {
-      result: "confirmed" as const,
-      predictionId: prediction.id,
-      faultId: actualFault.id,
-      outcome,
-    };
-  }
-
-  const outcome = await prisma.$transaction(async (tx) => {
-    const predictionOutcome = await tx.predictionOutcome.create({
+    const outcome = await tx.predictionOutcome.create({
       data: {
         predictionId: prediction.id,
-        outcome: "false_positive",
-        notes:
-          "No matching actual fault occurred within the prediction window.",
+        faultId: actualFault?.id ?? null,
+        outcome: confirmed ? "confirmed" : "false_positive",
+        notes: confirmed
+          ? "Matching actual fault occurred after the prediction and within its prediction window."
+          : "No matching actual fault occurred after the prediction and within its prediction window.",
+        evaluatedAt: referenceTime,
       },
     });
 
     await tx.prediction.update({
-      where: {
-        id: prediction.id,
-      },
+      where: { id: prediction.id },
       data: {
-        status: "false_positive",
+        status: confirmed ? "confirmed" : "false_positive",
       },
     });
 
-    return predictionOutcome;
+    return {
+      result: confirmed ? ("confirmed" as const) : ("false_positive" as const),
+      predictionId: prediction.id,
+      faultId: actualFault?.id ?? null,
+      outcome,
+    };
   });
-
-  return {
-    result: "false_positive" as const,
-    predictionId: prediction.id,
-    faultId: null,
-    outcome,
-  };
 }
