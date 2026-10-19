@@ -4,6 +4,7 @@ import prisma from "../config/database.js";
 import { predictFault } from "../services/aiServiceClient.js";
 import { generatePrediction } from "../services/predictionGenerationService.js";
 import { sendError, sendSuccess } from "../utils/apiResponse.js";
+import { emitMonitoringUpdate } from "../realtime/socket.js";
 
 export async function createTelemetry(
   req: Request,
@@ -64,6 +65,13 @@ export async function createTelemetry(
         availability,
         scenarioLabel,
       },
+    });
+
+    // Notify connected dashboards only after telemetry is persisted.
+    emitMonitoringUpdate({
+      type: "telemetry.created",
+      deviceId,
+      entityId: telemetry.id,
     });
 
     let prediction = null;

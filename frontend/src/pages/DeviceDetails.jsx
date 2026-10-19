@@ -25,8 +25,8 @@ import {
   DeviceTypeIcon,
   StatusBadge,
   TelemetryEmpty,
-  formatWhen,
 } from "../components/ui/NetworkUI";
+import { formatWhen } from "../utils/formatWhen";
 
 import "../styles/devices.css";
 

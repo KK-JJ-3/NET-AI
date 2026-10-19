@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshCw, Search, SlidersHorizontal, X, Pencil } from "lucide-react";
 
 import {
@@ -44,7 +44,7 @@ function Devices({ onSelectDevice }) {
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  async function loadDevices(isRefresh = false) {
+  const loadDevices = useCallback(async (isRefresh = false) => {
     try {
       if (isRefresh) {
         setRefreshing(true);
@@ -64,11 +64,15 @@ function Devices({ onSelectDevice }) {
       setLoading(false);
       setRefreshing(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
-    loadDevices();
-  }, []);
+    const timer = window.setTimeout(() => {
+      void loadDevices();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadDevices]);
 
   const counts = useMemo(
     () => ({

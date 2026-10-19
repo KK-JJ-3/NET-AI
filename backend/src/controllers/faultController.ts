@@ -4,6 +4,7 @@ import prisma from "../config/database.js";
 import { recordActualFault } from "../services/faultRecordingService.js";
 import { sendError, sendSuccess } from "../utils/apiResponse.js";
 import { resolveActualFault } from "../services/faultResolutionService.js";
+import { emitMonitoringUpdate } from "../realtime/socket.js";
 
 export async function createFault(
   req: Request,
@@ -20,6 +21,12 @@ export async function createFault(
         resolvedAt === undefined || resolvedAt === null
           ? resolvedAt
           : new Date(resolvedAt),
+    });
+
+    emitMonitoringUpdate({
+      type: "fault.created",
+      deviceId: fault.deviceId,
+      entityId: fault.id,
     });
 
     return sendSuccess(res, fault, 201);
@@ -107,6 +114,12 @@ export async function resolveFault(
 
   try {
     const fault = await resolveActualFault(faultId, new Date(resolvedAt));
+
+    emitMonitoringUpdate({
+      type: "fault.resolved",
+      deviceId: fault.deviceId,
+      entityId: fault.id,
+    });
 
     return sendSuccess(res, fault);
   } catch (error) {

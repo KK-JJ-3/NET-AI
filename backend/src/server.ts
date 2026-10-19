@@ -1,3 +1,4 @@
+import { createServer } from "node:http";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -16,6 +17,7 @@ import faultRoutes from "./routes/faultRoutes.js";
 import alertRoutes from "./routes/alertRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import { startPredictionOutcomeScheduler } from "./services/predictionOutcomeScheduler.js";
+import { attachRealtime } from "./realtime/socket.js";
 
 dotenv.config();
 import { env } from "./config/env.js";
@@ -84,8 +86,13 @@ app.use(notFoundHandler);
 // Global error handler
 app.use(errorHandler);
 
+// Attach Socket.IO to the same HTTP server as Express.
+const httpServer = createServer(app);
+attachRealtime(httpServer);
+
 // Start server
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`NetFault AI backend running on http://localhost:${PORT}`);
+  console.log("Socket.IO realtime transport initialized.");
   startPredictionOutcomeScheduler();
 });

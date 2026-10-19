@@ -1,4 +1,5 @@
 import prisma from "../config/database.js";
+import { emitMonitoringUpdate } from "../realtime/socket.js";
 import type { AiPredictionResult } from "./aiServiceClient.js";
 
 type FaultType = "congestion" | "device_failure";
@@ -74,7 +75,7 @@ export async function generatePrediction(
     throw new Error("Device not found");
   }
 
-  return prisma.$transaction(async (tx) => {
+  const created = await prisma.$transaction(async (tx) => {
     const prediction = await tx.prediction.create({
       data: {
         deviceId,
@@ -117,4 +118,20 @@ export async function generatePrediction(
 
     return { prediction, alert };
   });
+
+  emitMonitoringUpdate({
+    type: "prediction.created",
+    deviceId,
+    entityId: created.prediction.id,
+  });
+
+  if (created.alert) {
+    emitMonitoringUpdate({
+      type: "alert.created",
+      deviceId,
+      entityId: created.alert.id,
+    });
+  }
+
+  return created;
 }

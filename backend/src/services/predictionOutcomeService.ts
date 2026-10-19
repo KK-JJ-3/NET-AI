@@ -1,4 +1,5 @@
 import prisma from "../config/database.js";
+import { emitMonitoringUpdate } from "../realtime/socket.js";
 
 export async function evaluatePrediction(
   predictionId: number,
@@ -65,7 +66,7 @@ export async function evaluatePrediction(
     orderBy: { startedAt: "asc" },
   });
 
-  return prisma.$transaction(async (tx) => {
+  const evaluated = await prisma.$transaction(async (tx) => {
     const confirmed = actualFault !== null;
 
     const outcome = await tx.predictionOutcome.create({
@@ -94,4 +95,12 @@ export async function evaluatePrediction(
       outcome,
     };
   });
+
+  emitMonitoringUpdate({
+    type: "prediction.evaluated",
+    deviceId: prediction.deviceId,
+    entityId: prediction.id,
+  });
+
+  return evaluated;
 }

@@ -19,7 +19,8 @@ import {
   getFaults,
   getPredictions,
 } from "../api/client";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
+import { useMonitoringUpdates } from "../hooks/useMonitoringUpdates";
 
 const METRIC_CONFIG = {
   latency: {
@@ -49,7 +50,8 @@ const METRIC_CONFIG = {
 };
 
 function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const realtimeRevision = useMonitoringUpdates();
 
   const [summary, setSummary] = useState(null);
   const [devices, setDevices] = useState([]);
@@ -115,7 +117,7 @@ function Dashboard() {
     }
 
     loadDashboard();
-  }, []);
+  }, [realtimeRevision]);
 
   const latestTelemetryByDevice = useMemo(() => {
     return telemetry

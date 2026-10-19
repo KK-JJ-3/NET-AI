@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 
 import prisma from "../config/database.js";
 import { sendError, sendSuccess } from "../utils/apiResponse.js";
+import { emitMonitoringUpdate } from "../realtime/socket.js";
 
 export async function getAlerts(
   req: Request,
@@ -58,6 +59,12 @@ export async function acknowledgeAlert(
       data: {
         acknowledged: true,
       },
+    });
+
+    emitMonitoringUpdate({
+      type: "alert.acknowledged",
+      deviceId: updatedAlert.deviceId,
+      entityId: updatedAlert.id,
     });
 
     return sendSuccess(res, updatedAlert);

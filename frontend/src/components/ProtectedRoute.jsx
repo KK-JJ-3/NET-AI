@@ -1,4 +1,4 @@
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 
 function ProtectedRoute({ children }) {
   const { loading, isAuthenticated } = useAuth();

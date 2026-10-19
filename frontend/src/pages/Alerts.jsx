@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { acknowledgeAlert, getAlerts } from "../api/client";
+import { useMonitoringUpdates } from "../hooks/useMonitoringUpdates";
 
 function formatSeverity(value) {
   if (!value) {
@@ -225,6 +226,7 @@ function AlertDetails({ alert, onBack, onAcknowledge, acknowledging }) {
 }
 
 function Alerts() {
+  const realtimeRevision = useMonitoringUpdates();
   const [alerts, setAlerts] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -238,14 +240,16 @@ function Alerts() {
   const [acknowledging, setAcknowledging] = useState(false);
 
   const loadAlerts = useCallback(
-    async ({ showRefreshing = false } = {}) => {
+    async ({ showRefreshing = false, silent = false } = {}) => {
       try {
-        setError("");
+        if (!silent) {
+          setError("");
 
-        if (showRefreshing) {
-          setRefreshing(true);
-        } else {
-          setLoading(true);
+          if (showRefreshing) {
+            setRefreshing(true);
+          } else {
+            setLoading(true);
+          }
         }
 
         const filters = {};
@@ -259,23 +263,48 @@ function Alerts() {
         }
 
         const result = await getAlerts(filters);
+        const nextAlerts = Array.isArray(result) ? result : [];
 
-        setAlerts(Array.isArray(result) ? result : []);
+        setAlerts(nextAlerts);
+        setSelectedAlert((current) => {
+          if (!current) return current;
+          return nextAlerts.find((alert) => alert.id === current.id) ?? current;
+        });
       } catch (requestError) {
-        setError(
-          requestError?.message || "Unable to load alerts. Please try again.",
-        );
+        if (silent) {
+          console.error("Failed to refresh alerts:", requestError);
+        } else {
+          setError(
+            requestError?.message || "Unable to load alerts. Please try again.",
+          );
+        }
       } finally {
-        setLoading(false);
-        setRefreshing(false);
+        if (!silent) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     },
     [activeFilter],
   );
 
   useEffect(() => {
-    loadAlerts();
+    const timer = window.setTimeout(() => {
+      void loadAlerts();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [loadAlerts]);
+
+  useEffect(() => {
+    if (realtimeRevision === 0) return undefined;
+
+    const timer = window.setTimeout(() => {
+      void loadAlerts({ silent: true });
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadAlerts, realtimeRevision]);
 
   async function handleAcknowledge(id) {
     try {

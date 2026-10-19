@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "../styles/predictions.css";
 import { AlertTriangle, Clock3, RefreshCw, ShieldAlert } from "lucide-react";
 
 import { getPrediction, getPredictions } from "../api/client";
 
 import PredictionDetails from "./PredictionDetails";
+import { useMonitoringUpdates } from "../hooks/useMonitoringUpdates";
 
 const STATUS_FILTERS = [
   {
@@ -99,6 +100,7 @@ function getRiskPercentage(riskScore) {
 }
 
 function Predictions() {
+  const realtimeRevision = useMonitoringUpdates();
   const [predictions, setPredictions] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -114,49 +116,67 @@ function Predictions() {
 
   const [error, setError] = useState("");
 
-  async function loadPredictions(isRefresh = false) {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
+  const loadPredictions = useCallback(
+    async (isRefresh = false, silent = false) => {
+      try {
+        if (isRefresh) {
+          if (!silent) setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
+
+        if (!silent) setError("");
+
+        const data =
+          activeFilter === "all"
+            ? await getPredictions()
+            : await getPredictions({
+                status: activeFilter,
+              });
+
+        setPredictions(Array.isArray(data) ? data : []);
+      } catch (err) {
+        if (silent) {
+          // Keep the current list visible if a background refresh fails.
+          console.error("Failed to refresh predictions:", err);
+          return;
+        }
+
+        setError(err.message || "Failed to load predictions");
+        setPredictions([]);
+      } finally {
+        if (!silent) {
+          if (!isRefresh) setLoading(false);
+          setRefreshing(false);
+        }
       }
+    },
+    [activeFilter],
+  );
 
-      setError("");
-
-      const data =
-        activeFilter === "all"
-          ? await getPredictions()
-          : await getPredictions({
-              status: activeFilter,
-            });
-
-      setPredictions(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError(err.message || "Failed to load predictions");
-
-      setPredictions([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }
-
-  async function loadPredictionDetails(id) {
+  const loadPredictionDetails = useCallback(async (id, silent = false) => {
     try {
-      setDetailLoading(true);
-      setDetailError("");
-      setSelectedPrediction(null);
+      if (!silent) {
+        setDetailLoading(true);
+        setDetailError("");
+        setSelectedPrediction(null);
+      }
 
       const data = await getPrediction(id);
 
       setSelectedPrediction(data);
+      if (silent) setDetailError("");
     } catch (err) {
+      if (silent) {
+        console.error("Failed to refresh prediction details:", err);
+        return;
+      }
+
       setDetailError(err.message || "Failed to load prediction details");
     } finally {
-      setDetailLoading(false);
+      if (!silent) setDetailLoading(false);
     }
-  }
+  }, []);
 
   function handleOpenPrediction(id) {
     setSelectedPredictionId(id);
@@ -168,17 +188,48 @@ function Predictions() {
     setDetailError("");
   }
 
+  // Start network work asynchronously so effects do not synchronously trigger
+  // loading-state renders. Filter changes retain the normal loading state.
   useEffect(() => {
-    loadPredictions();
-  }, [activeFilter]);
+    const timer = window.setTimeout(() => {
+      void loadPredictions();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadPredictions]);
+
+  // Socket events refresh the list in the background without replacing it
+  // with a loading screen on every telemetry/prediction event.
+  useEffect(() => {
+    if (realtimeRevision === 0) return undefined;
+
+    const timer = window.setTimeout(() => {
+      void loadPredictions(true, true);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [realtimeRevision, loadPredictions]);
 
   useEffect(() => {
-    if (!selectedPredictionId) {
-      return;
-    }
+    if (!selectedPredictionId) return undefined;
 
-    loadPredictionDetails(selectedPredictionId);
-  }, [selectedPredictionId]);
+    const timer = window.setTimeout(() => {
+      void loadPredictionDetails(selectedPredictionId);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [selectedPredictionId, loadPredictionDetails]);
+
+  // Keep the detail view mounted while its data is refreshed silently.
+  useEffect(() => {
+    if (!selectedPredictionId || realtimeRevision === 0) return undefined;
+
+    const timer = window.setTimeout(() => {
+      void loadPredictionDetails(selectedPredictionId, true);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [realtimeRevision, selectedPredictionId, loadPredictionDetails]);
 
   const pendingCount = useMemo(
     () =>

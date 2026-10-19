@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { Eye, EyeOff } from "lucide-react";
 
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 
 function Login() {
   const { login } = useAuth();

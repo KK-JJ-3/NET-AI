@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "../styles/faults.css";
 import { AlertTriangle, Clock3, RefreshCw, ShieldAlert } from "lucide-react";
 
 import { getFault, getFaults } from "../api/client";
+import { useMonitoringUpdates } from "../hooks/useMonitoringUpdates";
 
 function formatFaultType(value) {
   if (!value) {
@@ -193,6 +194,7 @@ function FaultDetails({ fault, onBack }) {
 }
 
 function Faults() {
+  const realtimeRevision = useMonitoringUpdates();
   const [faults, setFaults] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -207,48 +209,64 @@ function Faults() {
 
   const [error, setError] = useState("");
 
-  async function loadFaults(isRefresh = false) {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
+  const loadFaults = useCallback(
+    async (isRefresh = false, silent = false) => {
+      try {
+        if (!silent) {
+          if (isRefresh) {
+            setRefreshing(true);
+          } else {
+            setLoading(true);
+          }
+          setError("");
+        }
+
+        const data =
+          activeFilter === "all"
+            ? await getFaults()
+            : await getFaults({
+                status: activeFilter,
+              });
+
+        setFaults(Array.isArray(data) ? data : []);
+      } catch (err) {
+        if (!silent) {
+          setError(err.message || "Failed to load faults");
+          setFaults([]);
+        } else {
+          console.error("Failed to refresh faults:", err);
+        }
+      } finally {
+        if (!silent) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
+    },
+    [activeFilter],
+  );
 
-      setError("");
-
-      const data =
-        activeFilter === "all"
-          ? await getFaults()
-          : await getFaults({
-              status: activeFilter,
-            });
-
-      setFaults(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError(err.message || "Failed to load faults");
-      setFaults([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }
-
-  async function loadFaultDetails(id) {
+  const loadFaultDetails = useCallback(async (id, silent = false) => {
     try {
-      setDetailLoading(true);
-      setDetailError("");
-      setSelectedFault(null);
+      if (!silent) {
+        setDetailLoading(true);
+        setDetailError("");
+        setSelectedFault(null);
+      }
 
       const data = await getFault(id);
 
       setSelectedFault(data);
     } catch (err) {
-      setDetailError(err.message || "Failed to load fault details");
+      if (!silent) {
+        setDetailError(err.message || "Failed to load fault details");
+      } else {
+        console.error("Failed to refresh fault details:", err);
+      }
     } finally {
-      setDetailLoading(false);
+      if (!silent) setDetailLoading(false);
     }
-  }
+  }, []);
 
   function handleOpenFault(id) {
     setSelectedFaultId(id);
@@ -261,16 +279,42 @@ function Faults() {
   }
 
   useEffect(() => {
-    loadFaults();
-  }, [activeFilter]);
+    const timer = window.setTimeout(() => {
+      void loadFaults();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadFaults]);
 
   useEffect(() => {
-    if (!selectedFaultId) {
-      return;
-    }
+    if (realtimeRevision === 0) return undefined;
 
-    loadFaultDetails(selectedFaultId);
-  }, [selectedFaultId]);
+    const timer = window.setTimeout(() => {
+      void loadFaults(true, true);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [realtimeRevision, loadFaults]);
+
+  useEffect(() => {
+    if (!selectedFaultId) return undefined;
+
+    const timer = window.setTimeout(() => {
+      void loadFaultDetails(selectedFaultId);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [selectedFaultId, loadFaultDetails]);
+
+  useEffect(() => {
+    if (!selectedFaultId || realtimeRevision === 0) return undefined;
+
+    const timer = window.setTimeout(() => {
+      void loadFaultDetails(selectedFaultId, true);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [realtimeRevision, selectedFaultId, loadFaultDetails]);
 
   const confirmedCount = useMemo(
     () => faults.filter((fault) => fault.status === "confirmed").length,

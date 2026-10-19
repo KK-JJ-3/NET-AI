@@ -3,7 +3,7 @@ import { useState } from "react";
 import "./App.css";
 import "./styles/netfault-ui-fixes.css";
 
-import { useAuth } from "./auth/AuthContext";
+import { useAuth } from "./auth/useAuth";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AppLayout from "./components/layout/AppLayout";
 

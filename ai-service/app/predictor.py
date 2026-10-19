@@ -85,7 +85,7 @@ class FaultPredictor:
                     "availability_current": 0.0,
                 },
                 explanationText=(
-                    "[RULE_BASED] An active device failure is indicated by "
+                    "An active device failure is indicated by "
                     "two consecutive telemetry readings reporting "
                     "the device as unavailable. Immediate "
                     "investigation is recommended."
