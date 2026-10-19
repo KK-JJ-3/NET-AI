@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import numpy as np
@@ -62,8 +61,10 @@ def build_training_features(
     same episode. The target is a fault type if its measured onset
     occurs within the future horizon; otherwise it is normal.
 
-    Samples at or after fault onset are excluded because this dataset
-    trains a forecasting model, not an active-fault detector.
+    Active-fault windows are excluded because active detection is handled
+    separately. Healthy recovery windows are retained and labeled normal,
+    including windows whose history still contains fault telemetry. This
+    teaches the forecaster to distinguish recovery from a future fault.
     """
     if window_size <= 0:
         raise ValueError("window_size must be greater than 0")
@@ -89,6 +90,36 @@ def build_training_features(
 
     if data.empty:
         raise ValueError("Input dataset cannot be empty")
+
+    # Validate telemetry before sorting or calculating features.
+    # Coerce invalid strings to NaN so they are rejected consistently.
+    numeric_data: pd.DataFrame = data[BASE_FEATURE_COLUMNS].apply(
+        pd.to_numeric,
+        errors="coerce",
+    )
+
+    missing_mask = numeric_data.isna()
+
+    if missing_mask.any().any():
+        invalid_columns = sorted(
+            missing_mask.columns[
+                missing_mask.any()
+            ].tolist()
+        )
+        raise ValueError(
+            "Telemetry contains missing or non-numeric values in: "
+            f"{invalid_columns}"
+        )
+
+    numeric_values = numeric_data.to_numpy(dtype=float)
+
+    if not np.isfinite(numeric_values).all():
+        raise ValueError(
+            "Telemetry contains NaN or infinite numeric values"
+        )
+
+    data = data.copy()
+    data[BASE_FEATURE_COLUMNS] = numeric_data
 
     data = data.sort_values(
         ["episode_id", "recorded_at"]
@@ -122,14 +153,33 @@ def build_training_features(
             else None
         )
 
-        # Inference requires 15 readings, so use complete windows here too.
+        # Recovery is the first healthy-labeled sample after actual onset.
+        recovery_index = None
+
+        if fault_index is not None:
+            labels = (
+                episode["scenario_label"]
+                .astype(str)
+                .str.strip()
+                .str.lower()
+            )
+
+            recovery_candidates = episode.index[
+                (episode.index > fault_index)
+                & (labels == "normal")
+                & (episode["availability"].astype(float) > 0)
+            ].tolist()
+
+            if recovery_candidates:
+                recovery_index = int(recovery_candidates[0])
+
+        # Exclude active-fault windows; retain healthy recovery windows.
         for index in range(window_size - 1, len(episode)):
             current_row = episode.iloc[index]
 
-            # Never train a future-warning example using readings from
-            # a fault that has already started.
             if fault_index is not None and index >= fault_index:
-                continue
+                if recovery_index is None or index < recovery_index:
+                    continue
 
             start = index - window_size + 1
             window = episode.iloc[start:index + 1]

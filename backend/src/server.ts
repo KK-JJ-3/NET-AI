@@ -1,11 +1,13 @@
+import "dotenv/config";
+
 import { createServer } from "node:http";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import helmet from "helmet";
 import morgan from "morgan";
 
 import prisma from "./config/database.js";
+import { env } from "./config/env.js";
 import { sendSuccess, sendError } from "./utils/apiResponse.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 import deviceRoutes from "./routes/deviceRoutes.js";
@@ -16,11 +18,11 @@ import predictionRoutes from "./routes/predictionRoutes.js";
 import faultRoutes from "./routes/faultRoutes.js";
 import alertRoutes from "./routes/alertRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
-import { startPredictionOutcomeScheduler } from "./services/predictionOutcomeScheduler.js";
-import { attachRealtime } from "./realtime/socket.js";
-
-dotenv.config();
-import { env } from "./config/env.js";
+import {
+  startPredictionOutcomeScheduler,
+  stopPredictionOutcomeScheduler,
+} from "./services/predictionOutcomeScheduler.js";
+import { attachRealtime, closeRealtime } from "./realtime/socket.js";
 
 const app = express();
 const PORT = env.port;
@@ -90,9 +92,55 @@ app.use(errorHandler);
 const httpServer = createServer(app);
 attachRealtime(httpServer);
 
+// Graceful shutdown
+let shuttingDown = false;
+
+async function shutdown(signal: string): Promise<void> {
+  if (shuttingDown) return;
+  shuttingDown = true;
+
+  console.log(`${signal} received. Shutting down NetFault AI backend...`);
+
+  stopPredictionOutcomeScheduler();
+
+  const forceShutdownTimer = setTimeout(() => {
+    console.error("Graceful shutdown timed out.");
+    process.exit(1);
+  }, 10_000);
+
+  forceShutdownTimer.unref();
+
+  try {
+    await closeRealtime();
+    await prisma.$disconnect();
+
+    console.log("NetFault AI backend shut down cleanly.");
+    process.exitCode = 0;
+  } catch (error) {
+    console.error("Error during backend shutdown:", error);
+    process.exitCode = 1;
+  } finally {
+    clearTimeout(forceShutdownTimer);
+  }
+}
+
+process.once("SIGINT", () => {
+  void shutdown("SIGINT");
+});
+
+process.once("SIGTERM", () => {
+  void shutdown("SIGTERM");
+});
+
 // Start server
 httpServer.listen(PORT, () => {
   console.log(`NetFault AI backend running on http://localhost:${PORT}`);
   console.log("Socket.IO realtime transport initialized.");
-  startPredictionOutcomeScheduler();
+
+  try {
+    startPredictionOutcomeScheduler();
+  } catch (error) {
+    console.error("Failed to start prediction outcome scheduler:", error);
+    void shutdown("SCHEDULER_STARTUP_FAILURE");
+  }
 });

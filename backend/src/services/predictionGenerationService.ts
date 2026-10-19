@@ -1,13 +1,17 @@
 import prisma from "../config/database.js";
 import { emitMonitoringUpdate } from "../realtime/socket.js";
+import { isActiveFaultDetection } from "./predictionClassification.js";
 import type { AiPredictionResult } from "./aiServiceClient.js";
 
 type FaultType = "congestion" | "device_failure";
 type Severity = "low" | "medium" | "high" | "critical";
 
+const DETECTION_PREFIXES = ["[ACTIVE_FAULT_DETECTION]", "[RULE_BASED]"];
+const ALERT_THRESHOLD = 0.6;
+
 function getSeverity(riskScore: number): Severity {
   if (riskScore >= 0.8) return "critical";
-  if (riskScore >= 0.6) return "high";
+  if (riskScore >= ALERT_THRESHOLD) return "high";
   if (riskScore >= 0.4) return "medium";
   return "low";
 }
@@ -21,6 +25,36 @@ function getAlertMessage(
     faultType === "device_failure" ? "Device Failure" : "Network Congestion";
 
   return `${severity.toUpperCase()} risk: ${faultName} predicted with ${(riskScore * 100).toFixed(1)}% risk.`;
+}
+
+/**
+ * Serialize prediction generation per device/fault type within this backend
+ * process. Multi-instance deployments should add database-level
+ * uniqueness/idempotency protection.
+ */
+const generationLocks = new Map<string, Promise<void>>();
+
+async function withGenerationLock<T>(
+  key: string,
+  operation: () => Promise<T>,
+): Promise<T> {
+  const previous = generationLocks.get(key) ?? Promise.resolve();
+  let release!: () => void;
+  const current = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  generationLocks.set(key, current);
+  await previous;
+
+  try {
+    return await operation();
+  } finally {
+    release();
+    if (generationLocks.get(key) === current) {
+      generationLocks.delete(key);
+    }
+  }
 }
 
 export async function generatePrediction(
@@ -58,13 +92,22 @@ export async function generatePrediction(
     throw new Error("Explanation text is required");
   }
 
-  // Normal operation is not a fault prediction.
   if (result.faultType === "normal") {
     return null;
   }
 
+  // Reject unexpected runtime values instead of persisting an invalid type.
+  if (
+    result.faultType !== "congestion" &&
+    result.faultType !== "device_failure"
+  ) {
+    throw new Error("Invalid fault type");
+  }
+
   const faultType: FaultType = result.faultType;
   const severity = getSeverity(result.riskScore);
+  const isDetection = isActiveFaultDetection(result.explanationText);
+  const windowMs = result.predictedWindowMinutes * 60_000;
 
   const device = await prisma.device.findUnique({
     where: { id: deviceId },
@@ -75,63 +118,187 @@ export async function generatePrediction(
     throw new Error("Device not found");
   }
 
-  const created = await prisma.$transaction(async (tx) => {
-    const prediction = await tx.prediction.create({
-      data: {
-        deviceId,
-        faultType,
-        riskScore: result.riskScore,
-        severity,
-        predictedWindowMinutes: result.predictedWindowMinutes,
-        explanationText: result.explanationText,
-        contributingFeatures: result.contributingFeatures,
-        status: "pending",
-        predictedAt,
-      },
-    });
-
-    let alert = null;
-
-    // Create alerts only when risk is at least 0.6.
-    if (result.riskScore >= 0.6) {
-      const existingActiveAlert = await tx.alert.findFirst({
+  const outcome = await withGenerationLock(`${deviceId}:${faultType}`, () =>
+    prisma.$transaction(async (tx) => {
+      const activeFault = await tx.fault.findFirst({
         where: {
           deviceId,
-          acknowledged: false,
-          prediction: { faultType },
+          faultType,
+          startedAt: { lte: predictedAt },
+          OR: [{ resolvedAt: null }, { resolvedAt: { gt: predictedAt } }],
         },
-        orderBy: { createdAt: "desc" },
+        select: { id: true, startedAt: true, resolvedAt: true },
+        orderBy: { startedAt: "desc" },
       });
 
-      if (!existingActiveAlert) {
-        alert = await tx.alert.create({
-          data: {
-            predictionId: prediction.id,
-            deviceId,
-            message: getAlertMessage(faultType, severity, result.riskScore),
-            severity,
-            acknowledged: false,
-          },
-        });
+      // A forecast for an already active fault is not a future forecast.
+      if (activeFault && !isDetection) {
+        return null;
       }
-    }
 
-    return { prediction, alert };
-  });
+      if (isDetection) {
+        // If the fault record has not arrived yet, use a short fallback
+        // window to deduplicate repeated detections.
+        const episodeStart =
+          activeFault?.startedAt ?? new Date(predictedAt.getTime() - windowMs);
 
-  emitMonitoringUpdate({
-    type: "prediction.created",
-    deviceId,
-    entityId: created.prediction.id,
-  });
+        const existingDetection = await tx.prediction.findFirst({
+          where: {
+            deviceId,
+            faultType,
+            predictedAt: { gte: episodeStart },
+            OR: DETECTION_PREFIXES.map((prefix) => ({
+              explanationText: { startsWith: prefix },
+            })),
+          },
+          select: { id: true },
+          orderBy: { predictedAt: "desc" },
+        });
 
-  if (created.alert) {
+        if (existingDetection) {
+          // Do not create another prediction for the same detected episode.
+          // A later high-risk result may still require an alert.
+          if (result.riskScore < ALERT_THRESHOLD) {
+            return null;
+          }
+
+          const alertStart = activeFault
+            ? new Date(activeFault.startedAt.getTime() - windowMs)
+            : new Date(predictedAt.getTime() - windowMs);
+
+          const existingAlert = await tx.alert.findFirst({
+            where: {
+              deviceId,
+              createdAt: { gte: alertStart },
+              prediction: { faultType },
+            },
+            select: { id: true },
+            orderBy: { createdAt: "desc" },
+          });
+
+          if (existingAlert) {
+            return null;
+          }
+
+          const alert = await tx.alert.create({
+            data: {
+              predictionId: existingDetection.id,
+              deviceId,
+              message: getAlertMessage(faultType, severity, result.riskScore),
+              severity,
+              acknowledged: false,
+            },
+          });
+
+          // Return only the newly created alert. Do not emit a duplicate
+          // prediction.created event for the existing prediction.
+          return {
+            prediction: null,
+            alert,
+          };
+        }
+      } else if (!activeFault) {
+        const recoveryStart = new Date(predictedAt.getTime() - windowMs);
+
+        const recentlyResolvedFault = await tx.fault.findFirst({
+          where: {
+            deviceId,
+            faultType,
+            status: "resolved",
+            resolvedAt: { gt: recoveryStart, lte: predictedAt },
+          },
+          select: { id: true },
+          orderBy: { resolvedAt: "desc" },
+        });
+
+        if (recentlyResolvedFault) {
+          return null;
+        }
+
+        const existingForecast = await tx.prediction.findFirst({
+          where: {
+            deviceId,
+            faultType,
+            predictedAt: { gte: recoveryStart },
+          },
+          select: { id: true },
+          orderBy: { predictedAt: "desc" },
+        });
+
+        if (existingForecast) {
+          return null;
+        }
+      }
+
+      const prediction = await tx.prediction.create({
+        data: {
+          deviceId,
+          faultType,
+          riskScore: result.riskScore,
+          severity,
+          predictedWindowMinutes: result.predictedWindowMinutes,
+          explanationText: result.explanationText,
+          contributingFeatures: result.contributingFeatures,
+          status: isDetection ? "confirmed" : "pending",
+          predictedAt,
+        },
+      });
+
+      let alert = null;
+
+      if (result.riskScore >= ALERT_THRESHOLD) {
+        const existingAlert = await tx.alert.findFirst({
+          where: {
+            deviceId,
+            ...(activeFault
+              ? {
+                  createdAt: {
+                    gte: new Date(activeFault.startedAt.getTime() - windowMs),
+                  },
+                }
+              : { acknowledged: false }),
+            prediction: { faultType },
+          },
+          orderBy: { createdAt: "desc" },
+          select: { id: true },
+        });
+
+        if (!existingAlert) {
+          alert = await tx.alert.create({
+            data: {
+              predictionId: prediction.id,
+              deviceId,
+              message: getAlertMessage(faultType, severity, result.riskScore),
+              severity,
+              acknowledged: false,
+            },
+          });
+        }
+      }
+
+      return { prediction, alert };
+    }),
+  );
+
+  if (!outcome) {
+    return null;
+  }
+
+  if (outcome.prediction) {
     emitMonitoringUpdate({
-      type: "alert.created",
+      type: "prediction.created",
       deviceId,
-      entityId: created.alert.id,
+      entityId: outcome.prediction.id,
     });
   }
 
-  return created;
+  if (outcome.alert) {
+    emitMonitoringUpdate({
+      type: "alert.created",
+      deviceId,
+      entityId: outcome.alert.id,
+    });
+  }
+
+  return outcome;
 }

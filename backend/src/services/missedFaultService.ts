@@ -1,7 +1,7 @@
 import prisma from "../config/database.js";
+import { isActiveFaultDetection } from "./predictionClassification.js";
 
 const LOOKBACK_MS = 30 * 60 * 1000;
-const RULE_BASED_PREFIX = "[RULE_BASED]";
 
 export async function findMissedFaults() {
   const faults = await prisma.fault.findMany({
@@ -30,7 +30,7 @@ export async function findMissedFaults() {
     });
 
     const hasForecast = earlierPredictions.some(
-      (prediction) => !prediction.explanationText.startsWith(RULE_BASED_PREFIX),
+      (prediction) => !isActiveFaultDetection(prediction.explanationText),
     );
 
     if (!hasForecast) {

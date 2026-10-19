@@ -20,20 +20,25 @@ def _values(
     window: list[TelemetryPoint],
     field: str,
 ) -> np.ndarray:
-    values = [
+    raw_values = [
         getattr(point, field)
         for point in window
-        if getattr(point, field) is not None
     ]
 
-    if not values:
-        return np.array([], dtype=float)
+    if any(value is None for value in raw_values):
+        raise ValueError(
+            f"Telemetry field '{field}' contains missing values"
+        )
 
-    return np.asarray(
-        values,
-        dtype=float,
-    )
+    values = np.asarray(raw_values, dtype=float)
 
+    if not np.isfinite(values).all():
+        raise ValueError(
+            f"Telemetry field '{field}' contains "
+            "non-finite values"
+        )
+
+    return values
 
 def _mean(values: np.ndarray) -> float:
     if values.size == 0:

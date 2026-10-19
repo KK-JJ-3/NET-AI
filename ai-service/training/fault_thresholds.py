@@ -15,7 +15,8 @@ def find_fault_index(
     Find the first telemetry row representing actual fault onset.
 
     Device failure:
-        First row where availability becomes 0.
+        First row of two consecutive unavailable readings, matching
+        the active-failure rule used by the inference service.
 
     Congestion:
         First row where both utilization and latency
@@ -30,14 +31,13 @@ def find_fault_index(
     ).reset_index(drop=True)
 
     if scenario == "device_failure":
-        failure_indices = episode.index[
-            episode["availability"] == 0
-        ].tolist()
-
-        if not failure_indices:
-            return None
-
-        return failure_indices[0]
+        unavailable = (
+            episode["availability"].astype(float).to_numpy() == 0
+        )
+        for index in range(1, len(unavailable)):
+            if unavailable[index - 1] and unavailable[index]:
+                return index - 1
+        return None
 
     if scenario == "congestion":
         congestion_mask = (

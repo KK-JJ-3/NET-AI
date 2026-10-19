@@ -93,3 +93,14 @@ export function emitMonitoringUpdate(
 
   socketServer?.emit("monitoring:update", payload);
 }
+
+export async function closeRealtime(): Promise<void> {
+  const io = socketServer;
+  socketServer = null;
+
+  if (!io) return;
+
+  await new Promise<void>((resolve) => {
+    io.close(() => resolve());
+  });
+}

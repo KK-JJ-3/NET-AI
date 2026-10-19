@@ -3,6 +3,7 @@ import { runPredictionOutcomeJob } from "./predictionOutcomeJob.js";
 const DEFAULT_INTERVAL_MS = 60_000;
 
 let schedulerTimer: NodeJS.Timeout | null = null;
+let jobRunning = false;
 
 export function startPredictionOutcomeScheduler(): void {
   if (schedulerTimer) {
@@ -23,6 +24,15 @@ export function startPredictionOutcomeScheduler(): void {
   );
 
   schedulerTimer = setInterval(async () => {
+    if (jobRunning) {
+      console.warn(
+        "Skipping prediction outcome run because the previous run is still active.",
+      );
+      return;
+    }
+
+    jobRunning = true;
+
     try {
       const result = await runPredictionOutcomeJob();
 
@@ -31,6 +41,8 @@ export function startPredictionOutcomeScheduler(): void {
       }
     } catch (error) {
       console.error("Prediction outcome scheduler failed:", error);
+    } finally {
+      jobRunning = false;
     }
   }, intervalMs);
 }

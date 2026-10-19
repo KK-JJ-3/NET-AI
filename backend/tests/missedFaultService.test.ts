@@ -69,6 +69,22 @@ describe("findMissedFaults", () => {
     expect(result.map((fault) => fault.id)).toEqual([1, 2]);
   });
 
+  it("recognizes the explicit active-fault detection marker", async () => {
+    prismaMock.prediction.findMany
+      .mockResolvedValueOnce([
+        {
+          id: 50,
+          explanationText:
+            "[ACTIVE_FAULT_DETECTION] Active network congestion detected.",
+        },
+      ])
+      .mockResolvedValueOnce([]);
+
+    const result = await findMissedFaults();
+
+    expect(result.map((fault) => fault.id)).toEqual([1, 2]);
+  });
+
   it("counts a fault as forecast when both rule-based and forecast predictions exist", async () => {
     prismaMock.prediction.findMany
       .mockResolvedValueOnce([

@@ -7,7 +7,7 @@ from app.explanation import (
     build_explanation,
     select_contributors,
 )
-from app.features import build_features
+from app.features import BASE_FEATURE_FIELDS, build_features
 from app.models.anomaly import AnomalyDetector
 from app.models.classifier import FaultClassifier
 from app.prediction import build_prediction
@@ -60,6 +60,21 @@ class FaultPredictor:
             window,
             key=lambda point: point.recorded_at,
         )
+        for index, point in enumerate(ordered_window):
+            for field in BASE_FEATURE_FIELDS:
+                value = getattr(point, field)
+
+                if value is None:
+                    raise ValueError(
+                        f"Telemetry point {index} has missing "
+                        f"'{field}'"
+                    )
+
+                if not np.isfinite(value):
+                    raise ValueError(
+                        f"Telemetry point {index} has non-finite "
+                        f"'{field}'"
+                    )
 
         latest = ordered_window[-1]
 
@@ -85,7 +100,7 @@ class FaultPredictor:
                     "availability_current": 0.0,
                 },
                 explanationText=(
-                    "An active device failure is indicated by "
+                    "[ACTIVE_FAULT_DETECTION] An active device failure is indicated by "
                     "two consecutive telemetry readings reporting "
                     "the device as unavailable. Immediate "
                     "investigation is recommended."
@@ -124,7 +139,7 @@ class FaultPredictor:
                     ),
                 },
                 explanationText=(
-                    "Active network congestion is indicated by "
+                    "[ACTIVE_FAULT_DETECTION] Active network congestion is indicated by "
                     "network utilization at or above "
                     f"{self.CONGESTION_UTILIZATION_THRESHOLD:.0f}% "
                     "and latency at or above "

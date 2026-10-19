@@ -12,7 +12,7 @@ from simulator.scenarios import (
 )
 
 
-DEFAULT_EPISODES_PER_CLASS = 50
+DEFAULT_EPISODES_PER_CLASS = 100
 DEFAULT_DURATION_MINUTES = 30
 DEFAULT_INTERVAL_SECONDS = 60
 DEFAULT_RANDOM_SEED = 42
@@ -61,6 +61,7 @@ def generate_dataset(
                 degradation_speed = 1.0
                 degradation_magnitude = 1.0
                 fault_start_ratio = 0.8
+                pattern = "gradual"
 
             elif scenario == ScenarioLabel.CONGESTION:
                 degradation_speed = float(
@@ -72,6 +73,7 @@ def generate_dataset(
                 )
 
                 fault_start_ratio = 0.8
+                pattern = str(rng.choice(["gradual", "accelerating", "bursty", "noisy", "weak_signal"]))
 
             else:
                 degradation_speed = float(
@@ -82,9 +84,9 @@ def generate_dataset(
                     rng.uniform(0.7, 1.3)
                 )
 
-                fault_start_ratio = float(
-                    rng.uniform(0.6, 0.9)
-                )
+                # Start early enough to leave a measurable recovery segment.
+                fault_start_ratio = float(rng.uniform(0.55, 0.75))
+                pattern = str(rng.choice(["gradual", "accelerating", "noisy", "weak_signal"]))
 
             start_time = (
                 datetime(
@@ -105,6 +107,7 @@ def generate_dataset(
                 degradation_speed=degradation_speed,
                 degradation_magnitude=degradation_magnitude,
                 fault_start_ratio=fault_start_ratio,
+                pattern=pattern,
             )
 
             samples = generate_scenario(
