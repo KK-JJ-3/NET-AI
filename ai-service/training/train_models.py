@@ -15,6 +15,7 @@ from sklearn.metrics import (
 
 from app.models.anomaly import AnomalyDetector
 from app.models.classifier import FaultClassifier
+from app.prediction import build_prediction
 from training.prepare import prepare_dataset
 
 
@@ -35,6 +36,7 @@ RANDOM_SEED = 42
 WINDOW_SIZE = 15
 FUTURE_HORIZON_MINUTES = 10
 EPISODE_DURATION_MINUTES = 60
+EPISODES_PER_CLASS = 300
 
 ANOMALY_CONTAMINATION = 0.05
 CLASSIFIER_ESTIMATORS = 200
@@ -152,12 +154,32 @@ def evaluate_model(
 
     actual = normalize_labels(y_test).to_numpy()
 
-    predicted = np.asarray(
-        classifier.predict(x_test.to_numpy(dtype=float))
-    ).astype(str)
+    # Match the live forecasting decision in app/predictor.py:
+    # convert class probabilities through app.prediction.build_prediction,
+    # including the combined fault-risk threshold, instead of using the
+    # Random Forest's raw argmax class prediction.
+    test_array = x_test.to_numpy(dtype=float)
+    probability_rows = classifier.predict_proba(test_array)
+    classes = [str(name) for name in classifier.classes()]
 
-    predicted = np.char.lower(
-        np.char.strip(predicted)
+    missing_classes = set(FAULT_CLASSES) - set(classes)
+    if missing_classes:
+        raise ValueError(
+            "Classifier is missing required classes: "
+            f"{sorted(missing_classes)}"
+        )
+
+    predicted = np.asarray(
+        [
+            build_prediction(
+                {
+                    class_name: float(probability)
+                    for class_name, probability in zip(classes, row)
+                }
+            ).fault_type
+            for row in probability_rows
+        ],
+        dtype=str,
     )
 
     accuracy = float(
@@ -203,6 +225,8 @@ def evaluate_model(
 
     return {
         "task": "future_fault_prediction",
+        "evaluation_decision_rule": "app.prediction.build_prediction",
+        "fault_risk_threshold": 0.4,
         "future_horizon_minutes": FUTURE_HORIZON_MINUTES,
         "window_size": WINDOW_SIZE,
         "test_samples": int(len(x_test)),
@@ -334,6 +358,7 @@ def train_models() -> None:
         window_size=WINDOW_SIZE,
         future_horizon_minutes=FUTURE_HORIZON_MINUTES,
         duration_minutes=EPISODE_DURATION_MINUTES,
+        episodes_per_class=EPISODES_PER_CLASS,
     )
 
     y_train = normalize_labels(y_train)
@@ -430,6 +455,11 @@ def train_models() -> None:
         len(x_train_with_anomaly.columns)
     )
     evaluation["random_seed"] = RANDOM_SEED
+    evaluation["episodes_per_class"] = EPISODES_PER_CLASS
+    evaluation["total_generated_episodes"] = (
+        EPISODES_PER_CLASS * len(FAULT_CLASSES)
+    )
+    evaluation["episode_duration_minutes"] = EPISODE_DURATION_MINUTES
     evaluation["anomaly_contamination"] = ANOMALY_CONTAMINATION
     evaluation["classifier_estimators"] = CLASSIFIER_ESTIMATORS
     evaluation["classifier_max_depth"] = CLASSIFIER_MAX_DEPTH
@@ -501,9 +531,23 @@ def train_models() -> None:
     print("Classification report:")
     print(
         classification_report(
-            y_test,
-            classifier.predict(
-                x_test_with_anomaly.to_numpy(dtype=float)
+            normalize_labels(y_test),
+            np.asarray(
+                [
+                    build_prediction(
+                        {
+                            class_name: float(probability)
+                            for class_name, probability in zip(
+                                [str(name) for name in classifier.classes()],
+                                row,
+                            )
+                        }
+                    ).fault_type
+                    for row in classifier.predict_proba(
+                        x_test_with_anomaly.to_numpy(dtype=float)
+                    )
+                ],
+                dtype=str,
             ),
             labels=FAULT_CLASSES,
             zero_division=0,
