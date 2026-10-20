@@ -116,6 +116,22 @@ def rate(numerator: int, denominator: int):
     return numerator / denominator if denominator else None
 
 
+def is_horizon_valid(
+    onset_index: int,
+    prediction_index: int,
+    predicted_window_minutes: int,
+    interval_seconds: int = INTERVAL_SECONDS,
+) -> bool:
+    """Return whether onset is strictly after prediction and within its own horizon."""
+    if predicted_window_minutes <= 0 or interval_seconds <= 0:
+        return False
+    steps_until_onset = onset_index - prediction_index
+    if steps_until_onset <= 0:
+        return False
+    horizon_steps = (predicted_window_minutes * 60) // interval_seconds
+    return steps_until_onset <= horizon_steps
+
+
 def main():
     import pandas as pd
 
@@ -254,13 +270,6 @@ def main():
                 warning_windows += 1
 
                 horizon_minutes = int(result["predictedWindowMinutes"])
-                horizon_steps = max(
-                    1,
-                    int(
-                        FORECAST_HORIZON_MINUTES * 60
-                        // INTERVAL_SECONDS
-                    ),
-                )
 
                 # Normal episodes are evaluated separately.
                 if scenario == "normal":
@@ -284,7 +293,11 @@ def main():
                     if predicted_type != scenario:
                         wrong_class += 1
                         wrong_class_warning_windows += 1
-                    elif onset <= last_index + horizon_steps:
+                    elif is_horizon_valid(
+                        onset_index=onset,
+                        prediction_index=last_index,
+                        predicted_window_minutes=horizon_minutes,
+                    ):
                         valid_hits.append(last_index)
                         valid_forecast_windows += 1
                     else:

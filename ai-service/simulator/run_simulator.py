@@ -34,6 +34,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device-id", type=int, required=True)
     parser.add_argument("--interface-id", type=int, default=None)
     parser.add_argument("--duration", type=int, default=30)
+    parser.add_argument(
+        "--tail-minutes",
+        type=int,
+        default=10,
+        help="Append healthy telemetry after the scenario so forecast windows can expire (0 disables the tail).",
+    )
     parser.add_argument("--interval", type=int, default=60)
     parser.add_argument("--pace-seconds", type=float, default=None)
     parser.add_argument(
@@ -52,6 +58,8 @@ def parse_args() -> argparse.Namespace:
         parser.error("--interface-id must be positive")
     if args.duration <= 0 or args.interval <= 0:
         parser.error("--duration and --interval must be positive")
+    if args.tail_minutes < 0:
+        parser.error("--tail-minutes cannot be negative")
     if args.pace_seconds is not None and args.pace_seconds < 0:
         parser.error("--pace-seconds cannot be negative")
 
@@ -199,6 +207,32 @@ def extract_fault_id(payload: dict[str, Any]) -> int:
     return fault_id
 
 
+def append_healthy_tail(
+    samples: list[TelemetrySample], tail_minutes: int, interval_seconds: int
+) -> list[TelemetrySample]:
+    """Append normal samples so pending forecast windows can expire in the backend.
+
+    The backend outcome job evaluates against the latest persisted telemetry
+    timestamp. Accelerated simulations otherwise finish before forecast windows
+    expire in simulation time, leaving those predictions pending.
+    """
+    if tail_minutes == 0 or not samples:
+        return list(samples)
+
+    tail_start = samples[-1].recorded_at
+    tail = generate_scenario(
+        ScenarioConfig(
+            label=ScenarioLabel.NORMAL,
+            duration_minutes=tail_minutes,
+            interval_seconds=interval_seconds,
+        ),
+        tail_start,
+    )
+    # The generated first sample is at the existing final timestamp; omit it
+    # so the tail adds exactly tail_minutes of new simulated time.
+    return [*samples, *tail[1:]]
+
+
 def run(args: argparse.Namespace) -> None:
     scenario = ScenarioLabel(args.scenario)
 
@@ -216,11 +250,16 @@ def run(args: argparse.Namespace) -> None:
     )
 
     simulation_start = datetime.now(timezone.utc)
-    samples = generate_scenario(config, simulation_start)
+    scenario_samples = generate_scenario(config, simulation_start)
+    samples = append_healthy_tail(
+        scenario_samples, args.tail_minutes, args.interval
+    )
 
     print(f"Scenario: {scenario.value}")
     print(f"Device ID: {args.device_id}")
-    print(f"Samples: {len(samples)}")
+    print(f"Scenario samples: {len(scenario_samples)}")
+    print(f"Healthy tail samples: {len(samples) - len(scenario_samples)}")
+    print(f"Total samples: {len(samples)}")
     print(f"Time mode: {args.time_mode}")
     print(f"Sample interval: {args.interval} simulated seconds")
     print(f"Send pace: {pace:g} real seconds")

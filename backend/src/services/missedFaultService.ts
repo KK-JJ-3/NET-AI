@@ -1,7 +1,7 @@
 import prisma from "../config/database.js";
 import { isActiveFaultDetection } from "./predictionClassification.js";
 
-const LOOKBACK_MS = 30 * 60 * 1000;
+const MINUTE_MS = 60_000;
 
 export async function findMissedFaults() {
   const faults = await prisma.fault.findMany({
@@ -12,26 +12,40 @@ export async function findMissedFaults() {
   const missedFaults: typeof faults = [];
 
   for (const fault of faults) {
-    const lookbackStart = new Date(fault.startedAt.getTime() - LOOKBACK_MS);
-
     const earlierPredictions = await prisma.prediction.findMany({
       where: {
         deviceId: fault.deviceId,
         faultType: fault.faultType,
         predictedAt: {
-          gte: lookbackStart,
           lt: fault.startedAt,
         },
       },
       select: {
         id: true,
         explanationText: true,
+        predictedAt: true,
+        predictedWindowMinutes: true,
       },
     });
 
-    const hasForecast = earlierPredictions.some(
-      (prediction) => !isActiveFaultDetection(prediction.explanationText),
-    );
+    const hasForecast = earlierPredictions.some((prediction) => {
+      if (isActiveFaultDetection(prediction.explanationText)) {
+        return false;
+      }
+
+      if (
+        !Number.isInteger(prediction.predictedWindowMinutes) ||
+        prediction.predictedWindowMinutes <= 0
+      ) {
+        return false;
+      }
+
+      const horizonStart =
+        fault.startedAt.getTime() -
+        prediction.predictedWindowMinutes * MINUTE_MS;
+
+      return prediction.predictedAt.getTime() >= horizonStart;
+    });
 
     if (!hasForecast) {
       missedFaults.push(fault);

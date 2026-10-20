@@ -9,6 +9,23 @@ type Severity = "low" | "medium" | "high" | "critical";
 const DETECTION_PREFIXES = ["[ACTIVE_FAULT_DETECTION]", "[RULE_BASED]"];
 const ALERT_THRESHOLD = 0.6;
 
+// Temporary diagnostics: remove these logs after identifying suppression behavior.
+function logSuppression(
+  reason: string,
+  deviceId: number,
+  faultType: FaultType,
+  predictedAt: Date,
+  extra: Record<string, unknown> = {},
+): void {
+  console.info("[prediction-diagnostic] suppressed", {
+    reason,
+    deviceId,
+    faultType,
+    predictedAt: predictedAt.toISOString(),
+    ...extra,
+  });
+}
+
 function getSeverity(riskScore: number): Severity {
   if (riskScore >= 0.8) return "critical";
   if (riskScore >= ALERT_THRESHOLD) return "high";
@@ -131,9 +148,32 @@ export async function generatePrediction(
         orderBy: { startedAt: "desc" },
       });
 
-      // A forecast for an already active fault is not a future forecast.
-      if (activeFault && !isDetection) {
-        return null;
+      // A forecast is not useful while any fault is active on this device.
+      // Do not filter by faultType here: a misclassified prediction must not
+      // create a second, misleading forecast during another active fault.
+      if (!isDetection) {
+        const anyActiveFault = await tx.fault.findFirst({
+          where: {
+            deviceId,
+            startedAt: { lte: predictedAt },
+            OR: [{ resolvedAt: null }, { resolvedAt: { gt: predictedAt } }],
+          },
+          select: { id: true },
+          orderBy: { startedAt: "desc" },
+        });
+
+        if (anyActiveFault) {
+          logSuppression(
+            "active-fault-on-device",
+            deviceId,
+            faultType,
+            predictedAt,
+            {
+              activeFaultId: anyActiveFault.id,
+            },
+          );
+          return null;
+        }
       }
 
       if (isDetection) {
@@ -159,6 +199,17 @@ export async function generatePrediction(
           // Do not create another prediction for the same detected episode.
           // A later high-risk result may still require an alert.
           if (result.riskScore < ALERT_THRESHOLD) {
+            logSuppression(
+              "existing-detection-below-alert-threshold",
+              deviceId,
+              faultType,
+              predictedAt,
+              {
+                existingPredictionId: existingDetection.id,
+                riskScore: result.riskScore,
+                alertThreshold: ALERT_THRESHOLD,
+              },
+            );
             return null;
           }
 
@@ -177,6 +228,17 @@ export async function generatePrediction(
           });
 
           if (existingAlert) {
+            logSuppression(
+              "duplicate-alert-for-detection",
+              deviceId,
+              faultType,
+              predictedAt,
+              {
+                existingPredictionId: existingDetection.id,
+                existingAlertId: existingAlert.id,
+                riskScore: result.riskScore,
+              },
+            );
             return null;
           }
 
@@ -203,7 +265,6 @@ export async function generatePrediction(
         const recentlyResolvedFault = await tx.fault.findFirst({
           where: {
             deviceId,
-            faultType,
             status: "resolved",
             resolvedAt: { gt: recoveryStart, lte: predictedAt },
           },
@@ -212,6 +273,16 @@ export async function generatePrediction(
         });
 
         if (recentlyResolvedFault) {
+          logSuppression(
+            "recently-resolved-fault",
+            deviceId,
+            faultType,
+            predictedAt,
+            {
+              faultId: recentlyResolvedFault.id,
+              recoveryWindowStart: recoveryStart.toISOString(),
+            },
+          );
           return null;
         }
 
@@ -226,6 +297,16 @@ export async function generatePrediction(
         });
 
         if (existingForecast) {
+          logSuppression(
+            "existing-forecast-in-window",
+            deviceId,
+            faultType,
+            predictedAt,
+            {
+              existingPredictionId: existingForecast.id,
+              forecastWindowStart: recoveryStart.toISOString(),
+            },
+          );
           return null;
         }
       }
@@ -273,6 +354,17 @@ export async function generatePrediction(
               acknowledged: false,
             },
           });
+        } else {
+          logSuppression(
+            "duplicate-alert-for-new-prediction",
+            deviceId,
+            faultType,
+            predictedAt,
+            {
+              existingAlertId: existingAlert.id,
+              riskScore: result.riskScore,
+            },
+          );
         }
       }
 

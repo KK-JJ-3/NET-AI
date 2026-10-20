@@ -26,6 +26,15 @@ const STATUS_FILTERS = [
   },
 ];
 
+const ACTIVE_DETECTION_PREFIXES = ["[ACTIVE_FAULT_DETECTION]", "[RULE_BASED]"];
+
+function isActiveDetection(prediction) {
+  const explanation = String(prediction?.explanationText || "").trimStart();
+  return ACTIVE_DETECTION_PREFIXES.some((prefix) =>
+    explanation.startsWith(prefix),
+  );
+}
+
 function formatFaultType(value) {
   if (!value) {
     return "Unknown";
@@ -127,13 +136,9 @@ function Predictions() {
 
         if (!silent) setError("");
 
-        const data =
-          activeFilter === "all"
-            ? await getPredictions()
-            : await getPredictions({
-                status: activeFilter,
-              });
-
+        // Always load the full set so summary counts remain independent of the
+        // selected status filter. Filtering is performed locally below.
+        const data = await getPredictions();
         setPredictions(Array.isArray(data) ? data : []);
       } catch (err) {
         if (silent) {
@@ -151,7 +156,7 @@ function Predictions() {
         }
       }
     },
-    [activeFilter],
+    [],
   );
 
   const loadPredictionDetails = useCallback(async (id, silent = false) => {
@@ -233,12 +238,36 @@ function Predictions() {
 
   const pendingCount = useMemo(
     () =>
-      predictions.filter((prediction) => prediction.status === "pending")
-        .length,
+      predictions.filter(
+        (prediction) =>
+          prediction.status === "pending" && !isActiveDetection(prediction),
+      ).length,
     [predictions],
   );
 
-  const visiblePredictions = predictions;
+  const filteredPredictions = useMemo(
+    () =>
+      predictions.filter(
+        (prediction) =>
+          activeFilter === "all" || prediction.status === activeFilter,
+      ),
+    [predictions, activeFilter],
+  );
+
+  const forecastPredictions = useMemo(
+    () =>
+      filteredPredictions.filter(
+        (prediction) => !isActiveDetection(prediction),
+      ),
+    [filteredPredictions],
+  );
+
+  const activeDetections = useMemo(
+    () => filteredPredictions.filter(isActiveDetection),
+    [filteredPredictions],
+  );
+
+  const visiblePredictions = filteredPredictions;
 
   if (selectedPredictionId) {
     if (detailLoading) {
@@ -414,89 +443,121 @@ function Predictions() {
             <h2>No predictions available</h2>
 
             <p>
-              There are currently no prediction records for this filter.
-              Prediction generation will be connected during the later AI
-              pipeline stage.
+              No forecasts or active detections match this filter. New records
+              will appear here as telemetry is processed.
             </p>
           </div>
         )}
 
         {!loading && !error && visiblePredictions.length > 0 && (
-          <section className="prediction-list">
-            {visiblePredictions.map((prediction) => (
-              <article
-                className="prediction-card"
-                key={prediction.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => handleOpenPrediction(prediction.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-
-                    handleOpenPrediction(prediction.id);
-                  }
-                }}
-                aria-label={`Open prediction ${prediction.id}`}
-              >
-                <div className="prediction-card-main">
-                  <div className="prediction-card-heading">
-                    <div>
-                      <span className="prediction-id">
-                        PREDICTION #{prediction.id}
-                      </span>
-
-                      <h2>{formatFaultType(prediction.faultType)}</h2>
-                    </div>
-
-                    <span
-                      className={`prediction-severity ${getSeverityClass(
-                        prediction.severity,
-                      )}`}
-                    >
-                      {formatStatus(prediction.severity)}
-                    </span>
+          <div className="prediction-groups">
+            {[
+              {
+                title: "Future forecasts",
+                items: forecastPredictions,
+                kind: "forecast",
+              },
+              {
+                title: "Active-fault detections",
+                items: activeDetections,
+                kind: "detection",
+              },
+            ]
+              .filter((group) => group.items.length > 0)
+              .map((group) => (
+                <section className="prediction-group" key={group.kind}>
+                  <div className="prediction-group-heading">
+                    <h2>{group.title}</h2>
+                    <span>{group.items.length}</span>
                   </div>
+                  <div className="prediction-list">
+                    {group.items.map((prediction) => (
+                      <article
+                        className="prediction-card"
+                        key={prediction.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => handleOpenPrediction(prediction.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
 
-                  <div className="prediction-metrics">
-                    <div className="prediction-metric">
-                      <span>Risk score</span>
+                            handleOpenPrediction(prediction.id);
+                          }
+                        }}
+                        aria-label={`Open prediction ${prediction.id}`}
+                      >
+                        <div className="prediction-card-main">
+                          <div className="prediction-card-heading">
+                            <div>
+                              <span className="prediction-id">
+                                PREDICTION #{prediction.id}
+                              </span>
 
-                      <strong>{getRiskPercentage(prediction.riskScore)}</strong>
-                    </div>
+                              <h2>{formatFaultType(prediction.faultType)}</h2>
+                            </div>
 
-                    <div className="prediction-metric">
-                      <span>Device</span>
+                            <span
+                              className={`prediction-severity ${getSeverityClass(
+                                prediction.severity,
+                              )}`}
+                            >
+                              {formatStatus(prediction.severity)}
+                            </span>
+                          </div>
 
-                      <strong>#{prediction.deviceId}</strong>
-                    </div>
+                          <div className="prediction-metrics">
+                            <div className="prediction-metric">
+                              <span>Risk score</span>
 
-                    <div className="prediction-metric">
-                      <span>Window</span>
+                              <strong>
+                                {getRiskPercentage(prediction.riskScore)}
+                              </strong>
+                            </div>
 
-                      <strong>
-                        <Clock3 size={15} aria-hidden="true" />
+                            <div className="prediction-metric">
+                              <span>Device</span>
 
-                        {formatWindow(prediction.predictedWindowMinutes)}
-                      </strong>
-                    </div>
+                              <strong>#{prediction.deviceId}</strong>
+                            </div>
 
-                    <div className="prediction-metric">
-                      <span>Status</span>
+                            <div className="prediction-metric">
+                              <span>Window</span>
 
-                      <strong>{formatStatus(prediction.status)}</strong>
-                    </div>
+                              <strong>
+                                <Clock3 size={15} aria-hidden="true" />
+
+                                {formatWindow(
+                                  prediction.predictedWindowMinutes,
+                                )}
+                              </strong>
+                            </div>
+
+                            <div className="prediction-metric">
+                              <span>Status</span>
+
+                              <strong>{formatStatus(prediction.status)}</strong>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="prediction-card-footer">
+                          <span>
+                            {isActiveDetection(prediction)
+                              ? "Detected during active fault"
+                              : "Forecast for upcoming fault"}
+                          </span>
+                          <span>
+                            Predicted at{" "}
+                            {formatPredictedAt(prediction.predictedAt)}
+                          </span>
+                        </div>
+                      </article>
+                    ))}
                   </div>
-                </div>
-
-                <div className="prediction-card-footer">
-                  <span>
-                    Predicted at {formatPredictedAt(prediction.predictedAt)}
-                  </span>
-                </div>
-              </article>
-            ))}
-          </section>
+                </section>
+              ))}
+          </div>
         )}
       </div>
     </div>

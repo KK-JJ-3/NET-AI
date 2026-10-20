@@ -1317,3 +1317,39 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Forecasts and active detections are separate groups on the Predictions page. */
+.prediction-groups {
+  display: grid;
+  gap: 30px;
+}
+
+.prediction-group {
+  min-width: 0;
+}
+
+.prediction-group-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.prediction-group-heading h2 {
+  margin: 0;
+  color: var(--text, #f5f5f5);
+  font-size: 18px;
+  font-weight: 850;
+}
+
+.prediction-group-heading span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  color: #000;
+  background: var(--lime, #b7ff00);
+  font-size: 12px;
+  font-weight: 900;
+}

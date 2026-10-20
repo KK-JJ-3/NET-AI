@@ -81,6 +81,20 @@ describe("generatePrediction fault-episode reliability", () => {
     expect(emitMonitoringUpdateMock).not.toHaveBeenCalled();
   });
 
+  it("suppresses a forecast when a different fault type is already active", async () => {
+    txMock.fault.findFirst.mockImplementation(async ({ where }) => {
+      if (where.status === "resolved") return null;
+      // The matching-type lookup finds nothing, but another fault is active.
+      return where.faultType ? null : activeFault;
+    });
+
+    const result = await generatePrediction(7, forecast, predictedAt);
+
+    expect(result).toBeNull();
+    expect(txMock.prediction.create).not.toHaveBeenCalled();
+    expect(emitMonitoringUpdateMock).not.toHaveBeenCalled();
+  });
+
   it("stores an active-fault detection as confirmed, not as a pending forecast", async () => {
     txMock.fault.findFirst.mockImplementation(async ({ where }) =>
       where.status === "resolved" ? null : activeFault,
@@ -212,6 +226,19 @@ describe("generatePrediction fault-episode reliability", () => {
     expect(txMock.prediction.create).not.toHaveBeenCalled();
   });
 
+  it("suppresses a forecast after a different fault type has recently resolved", async () => {
+    txMock.fault.findFirst.mockImplementation(async ({ where }) => {
+      if (where.status === "resolved") return { id: 12 };
+      return null;
+    });
+
+    const result = await generatePrediction(7, forecast, predictedAt);
+
+    expect(result).toBeNull();
+    expect(txMock.prediction.create).not.toHaveBeenCalled();
+    expect(emitMonitoringUpdateMock).not.toHaveBeenCalled();
+  });
+
   it("deduplicates forecasts within the configured prediction horizon", async () => {
     txMock.prediction.findFirst.mockResolvedValue({ id: 99 });
 
@@ -238,5 +265,27 @@ describe("generatePrediction fault-episode reliability", () => {
 
     expect(txMock.prediction.create).toHaveBeenCalledTimes(1);
     expect(results.filter(Boolean)).toHaveLength(1);
+  });
+
+  it("suppresses concurrent forecasts of different types while a fault is active", async () => {
+    txMock.fault.findFirst.mockImplementation(async ({ where }) =>
+      where.status === "resolved" ? null : activeFault,
+    );
+
+    const deviceFailureForecast = {
+      ...forecast,
+      faultType: "device_failure" as const,
+      explanationText: "Forecast: device failure risk increasing.",
+    };
+
+    const results = await Promise.all([
+      generatePrediction(7, forecast, predictedAt),
+      generatePrediction(7, deviceFailureForecast, predictedAt),
+    ]);
+
+    expect(results).toEqual([null, null]);
+    expect(txMock.prediction.create).not.toHaveBeenCalled();
+    expect(txMock.alert.create).not.toHaveBeenCalled();
+    expect(emitMonitoringUpdateMock).not.toHaveBeenCalled();
   });
 });
