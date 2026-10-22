@@ -22,7 +22,7 @@ export async function createTelemetry(
       cpuPct,
       memoryPct,
       availability,
-      scenarioLabel,
+      scenarioLabel = "normal",
     } = req.body;
 
     const device = await prisma.device.findUnique({
@@ -49,6 +49,22 @@ export async function createTelemetry(
           400,
         );
       }
+    }
+
+    const duplicateTelemetry = await prisma.telemetry.findFirst({
+      where: {
+        deviceId,
+        recordedAt: new Date(recordedAt),
+      },
+      select: { id: true },
+    });
+
+    if (duplicateTelemetry) {
+      return sendError(
+        res,
+        "Telemetry already exists for this device and timestamp",
+        409,
+      );
     }
 
     const telemetry = await prisma.telemetry.create({

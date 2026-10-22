@@ -28,6 +28,10 @@ vi.mock("../src/config/database.js", () => ({
   default: prismaMock,
 }));
 
+vi.mock("../src/realtime/socket.js", () => ({
+  emitMonitoringUpdate: vi.fn(),
+}));
+
 import { evaluatePrediction } from "../src/services/predictionOutcomeService.js";
 
 describe("evaluatePrediction", () => {

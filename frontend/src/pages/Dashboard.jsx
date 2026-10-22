@@ -432,6 +432,31 @@ function Dashboard() {
             </div>
           </section>
 
+          {/* Fault Metrics */}
+          <section className="dashboard-section">
+            <div className="dashboard-section-title">
+              <div>
+                <p className="eyebrow">FAULT OVERVIEW</p>
+                <h2>Fault Detection</h2>
+              </div>
+              <span>Current system fault status</span>
+            </div>
+
+            <div className="dashboard-metric-grid">
+              <MetricCard
+                label="Detected Faults"
+                value={summary?.faults?.total ?? 0}
+                tone="red"
+              />
+
+              <MetricCard
+                label="Active Faults"
+                value={summary?.faults?.confirmed ?? 0}
+                tone="orange"
+              />
+            </div>
+          </section>
+
           {/* Main Monitoring Row */}
           <section className="dashboard-main-grid">
             <div className="dashboard-panel dashboard-performance-panel">

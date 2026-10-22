@@ -36,6 +36,10 @@ export async function createFault(
         return sendError(res, error.message, 404);
       }
 
+      if (error.message === "Duplicate fault record") {
+        return sendError(res, error.message, 409);
+      }
+
       if (
         error.message === "Invalid device ID" ||
         error.message === "Invalid fault start time" ||

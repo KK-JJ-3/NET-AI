@@ -52,6 +52,19 @@ export async function recordActualFault(
     }
   }
 
+  const duplicate = await prisma.fault.findFirst({
+    where: {
+      deviceId,
+      faultType: input.faultType,
+      startedAt: input.startedAt,
+    },
+    select: { id: true },
+  });
+
+  if (duplicate) {
+    throw new Error("Duplicate fault record");
+  }
+
   return prisma.fault.create({
     data: {
       deviceId,

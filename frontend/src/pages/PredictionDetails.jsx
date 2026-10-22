@@ -235,8 +235,9 @@ function PredictionDetails({ prediction, onBack }) {
     prediction.riskScore,
   );
 
-  const explanation =
-    prediction.explanationText || getFallbackExplanation(prediction);
+  const explanation = (
+    prediction.explanationText || getFallbackExplanation(prediction)
+  ).replace(/^\[(?:ACTIVE_FAULT_DETECTION|RULE_BASED)\]\s*/, "");
 
   return (
     <div className="page-scroll">

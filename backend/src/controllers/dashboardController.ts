@@ -15,6 +15,7 @@ export async function getDashboardSummary(
       devicesDown,
       pendingPredictions,
       confirmedFaults,
+      totalFaults,
       unacknowledgedAlerts,
     ] = await Promise.all([
       prisma.device.count(),
@@ -39,6 +40,8 @@ export async function getDashboardSummary(
         where: { status: "confirmed" },
       }),
 
+      prisma.fault.count(),
+
       prisma.alert.count({
         where: { acknowledged: false },
       }),
@@ -55,7 +58,10 @@ export async function getDashboardSummary(
         pending: pendingPredictions,
       },
       faults: {
+        // "confirmed" is the currently unresolved/active count.
+        // "total" includes resolved faults for the detected-faults metric.
         confirmed: confirmedFaults,
+        total: totalFaults,
       },
       alerts: {
         unacknowledged: unacknowledgedAlerts,
