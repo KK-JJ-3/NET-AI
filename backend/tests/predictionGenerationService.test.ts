@@ -239,32 +239,30 @@ describe("generatePrediction fault-episode reliability", () => {
     expect(emitMonitoringUpdateMock).not.toHaveBeenCalled();
   });
 
-  it("deduplicates forecasts within the configured prediction horizon", async () => {
+  it("allows a later forecast within the same prediction horizon", async () => {
+    // Existing forecasts must not suppress a new scoring window. The
+    // prediction lookup is reserved for detection-episode deduplication.
     txMock.prediction.findFirst.mockResolvedValue({ id: 99 });
 
     const result = await generatePrediction(7, forecast, predictedAt);
 
-    expect(result).toBeNull();
-    expect(txMock.prediction.create).not.toHaveBeenCalled();
+    expect(result?.prediction.status).toBe("pending");
+    expect(txMock.prediction.create).toHaveBeenCalledTimes(1);
   });
 
-  it("serializes concurrent scoring so only one forecast is created for a horizon", async () => {
-    let predictionWasCreated = false;
-    txMock.prediction.findFirst.mockImplementation(async () =>
-      predictionWasCreated ? { id: 100 } : null,
-    );
-    txMock.prediction.create.mockImplementation(async ({ data }) => {
-      predictionWasCreated = true;
-      return { id: 101, ...data };
-    });
+  it("creates forecasts for concurrent scoring windows without forecast-window suppression", async () => {
+    txMock.prediction.create.mockImplementation(async ({ data }) => ({
+      id: 101,
+      ...data,
+    }));
 
     const results = await Promise.all([
       generatePrediction(7, forecast, predictedAt),
-      generatePrediction(7, forecast, predictedAt),
+      generatePrediction(7, forecast, new Date(predictedAt.getTime() + 1_000)),
     ]);
 
-    expect(txMock.prediction.create).toHaveBeenCalledTimes(1);
-    expect(results.filter(Boolean)).toHaveLength(1);
+    expect(txMock.prediction.create).toHaveBeenCalledTimes(2);
+    expect(results.filter(Boolean)).toHaveLength(2);
   });
 
   it("suppresses concurrent forecasts of different types while a fault is active", async () => {

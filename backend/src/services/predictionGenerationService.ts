@@ -220,8 +220,7 @@ export async function generatePrediction(
           const existingAlert = await tx.alert.findFirst({
             where: {
               deviceId,
-              createdAt: { gte: alertStart },
-              prediction: { faultType },
+              prediction: { faultType, predictedAt: { gte: alertStart } },
             },
             select: { id: true },
             orderBy: { createdAt: "desc" },
@@ -285,30 +284,6 @@ export async function generatePrediction(
           );
           return null;
         }
-
-        const existingForecast = await tx.prediction.findFirst({
-          where: {
-            deviceId,
-            faultType,
-            predictedAt: { gte: recoveryStart },
-          },
-          select: { id: true },
-          orderBy: { predictedAt: "desc" },
-        });
-
-        if (existingForecast) {
-          logSuppression(
-            "existing-forecast-in-window",
-            deviceId,
-            faultType,
-            predictedAt,
-            {
-              existingPredictionId: existingForecast.id,
-              forecastWindowStart: recoveryStart.toISOString(),
-            },
-          );
-          return null;
-        }
       }
 
       const prediction = await tx.prediction.create({
@@ -331,14 +306,17 @@ export async function generatePrediction(
         const existingAlert = await tx.alert.findFirst({
           where: {
             deviceId,
-            ...(activeFault
-              ? {
-                  createdAt: {
-                    gte: new Date(activeFault.startedAt.getTime() - windowMs),
-                  },
-                }
-              : { acknowledged: false }),
-            prediction: { faultType },
+            ...(activeFault ? {} : { acknowledged: false }),
+            prediction: {
+              faultType,
+              ...(activeFault
+                ? {
+                    predictedAt: {
+                      gte: new Date(activeFault.startedAt.getTime() - windowMs),
+                    },
+                  }
+                : {}),
+            },
           },
           orderBy: { createdAt: "desc" },
           select: { id: true },
