@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.forecast_config import FORECAST_HORIZON_MINUTES as SHARED_FORECAST_HORIZON_MINUTES
+
 import json
 from datetime import timedelta
 from pathlib import Path
@@ -21,7 +23,7 @@ WINDOW_SIZE = 15
 WARNING_THRESHOLD = 0.40
 RANDOM_SEED = 20261017
 INTERVAL_SECONDS = 60
-FORECAST_HORIZON_MINUTES = 10
+FORECAST_HORIZON_MINUTES = SHARED_FORECAST_HORIZON_MINUTES
 
 
 def to_api_point(row: dict) -> dict:

@@ -1,0 +1,1402 @@
+{
+  "task": "risk_threshold_multiseed_validation",
+  "evaluation_only": true,
+  "production_threshold_changed": false,
+  "model_artifacts_saved": false,
+  "decision_rule": "risk=1-P(normal); risk<threshold => normal; otherwise highest-probability fault class",
+  "thresholds": [
+    0.4,
+    0.45,
+    0.5,
+    0.55,
+    0.6
+  ],
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "episodes_per_class": 300,
+  "future_horizon_minutes": 20,
+  "window_size": 15,
+  "total_test_samples_across_seeds": 20091,
+  "per_seed": {
+    "42": {
+      "test_samples": 6880,
+      "results": [
+        {
+          "threshold": 0.4,
+          "accuracy_percent": 94.23,
+          "macro_f1_percent": 92.49,
+          "normal_samples": 4904,
+          "normal_false_positives": 350,
+          "normal_false_positive_rate_percent": 7.14,
+          "future_fault_samples": 1976,
+          "missed_future_faults": 8,
+          "future_fault_miss_rate_percent": 0.4,
+          "classification_report": {
+            "normal": {
+              "precision": 0.9982463831652784,
+              "recall": 0.9286296900489397,
+              "f1-score": 0.9621804352419184,
+              "support": 4904.0
+            },
+            "congestion": {
+              "precision": 0.9427645788336934,
+              "recall": 0.9743303571428571,
+              "f1-score": 0.9582875960482986,
+              "support": 896.0
+            },
+            "device_failure": {
+              "precision": 0.7586206896551724,
+              "recall": 0.9777777777777777,
+              "f1-score": 0.8543689320388349,
+              "support": 1080.0
+            },
+            "accuracy": 0.942296511627907,
+            "macro avg": {
+              "precision": 0.899877217218048,
+              "recall": 0.9602459416565249,
+              "f1-score": 0.9249456544430174,
+              "support": 6880.0
+            },
+            "weighted avg": {
+              "precision": 0.9534051846664389,
+              "recall": 0.942296511627907,
+              "f1-score": 0.944749562076684,
+              "support": 6880.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "normal",
+              "congestion",
+              "device_failure"
+            ],
+            "matrix": [
+              [
+                4554,
+                37,
+                313
+              ],
+              [
+                0,
+                873,
+                23
+              ],
+              [
+                8,
+                16,
+                1056
+              ]
+            ]
+          }
+        },
+        {
+          "threshold": 0.45,
+          "accuracy_percent": 94.38,
+          "macro_f1_percent": 92.64,
+          "normal_samples": 4904,
+          "normal_false_positives": 337,
+          "normal_false_positive_rate_percent": 6.87,
+          "future_fault_samples": 1976,
+          "missed_future_faults": 11,
+          "future_fault_miss_rate_percent": 0.56,
+          "classification_report": {
+            "normal": {
+              "precision": 0.9975972040192224,
+              "recall": 0.9312805872756933,
+              "f1-score": 0.9632988820923856,
+              "support": 4904.0
+            },
+            "congestion": {
+              "precision": 0.9427645788336934,
+              "recall": 0.9743303571428571,
+              "f1-score": 0.9582875960482986,
+              "support": 896.0
+            },
+            "device_failure": {
+              "precision": 0.7652616279069767,
+              "recall": 0.975,
+              "f1-score": 0.8574918566775245,
+              "support": 1080.0
+            },
+            "accuracy": 0.94375,
+            "macro avg": {
+              "precision": 0.9018744702532975,
+              "recall": 0.9602036481395168,
+              "f1-score": 0.9263594449394029,
+              "support": 6880.0
+            },
+            "weighted avg": {
+              "precision": 0.9539849286751149,
+              "recall": 0.94375,
+              "f1-score": 0.9460370071296601,
+              "support": 6880.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "normal",
+              "congestion",
+              "device_failure"
+            ],
+            "matrix": [
+              [
+                4567,
+                37,
+                300
+              ],
+              [
+                0,
+                873,
+                23
+              ],
+              [
+                11,
+                16,
+                1053
+              ]
+            ]
+          }
+        },
+        {
+          "threshold": 0.5,
+          "accuracy_percent": 94.62,
+          "macro_f1_percent": 92.9,
+          "normal_samples": 4904,
+          "normal_false_positives": 319,
+          "normal_false_positive_rate_percent": 6.5,
+          "future_fault_samples": 1976,
+          "missed_future_faults": 13,
+          "future_fault_miss_rate_percent": 0.66,
+          "classification_report": {
+            "normal": {
+              "precision": 0.9971726837755546,
+              "recall": 0.9349510603588908,
+              "f1-score": 0.9650599873710798,
+              "support": 4904.0
+            },
+            "congestion": {
+              "precision": 0.9427645788336934,
+              "recall": 0.9743303571428571,
+              "f1-score": 0.9582875960482986,
+              "support": 896.0
+            },
+            "device_failure": {
+              "precision": 0.775811209439528,
+              "recall": 0.9740740740740741,
+              "f1-score": 0.8637110016420362,
+              "support": 1080.0
+            },
+            "accuracy": 0.9462209302325582,
+            "macro avg": {
+              "precision": 0.9052494906829253,
+              "recall": 0.9611184971919405,
+              "f1-score": 0.9290195283538049,
+              "support": 6880.0
+            },
+            "weighted avg": {
+              "precision": 0.9553383735559591,
+              "recall": 0.9462209302325582,
+              "f1-score": 0.9482685677180888,
+              "support": 6880.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "normal",
+              "congestion",
+              "device_failure"
+            ],
+            "matrix": [
+              [
+                4585,
+                37,
+                282
+              ],
+              [
+                1,
+                873,
+                22
+              ],
+              [
+                12,
+                16,
+                1052
+              ]
+            ]
+          }
+        },
+        {
+          "threshold": 0.55,
+          "accuracy_percent": 94.87,
+          "macro_f1_percent": 93.15,
+          "normal_samples": 4904,
+          "normal_false_positives": 298,
+          "normal_false_positive_rate_percent": 6.08,
+          "future_fault_samples": 1976,
+          "missed_future_faults": 17,
+          "future_fault_miss_rate_percent": 0.86,
+          "classification_report": {
+            "normal": {
+              "precision": 0.9963227341553104,
+              "recall": 0.9392332789559543,
+              "f1-score": 0.9669360764144012,
+              "support": 4904.0
+            },
+            "congestion": {
+              "precision": 0.9427645788336934,
+              "recall": 0.9743303571428571,
+              "f1-score": 0.9582875960482986,
+              "support": 896.0
+            },
+            "device_failure": {
+              "precision": 0.7873779113448535,
+              "recall": 0.9703703703703703,
+              "f1-score": 0.8693488179178764,
+              "support": 1080.0
+            },
+            "accuracy": 0.9486918604651163,
+            "macro avg": {
+              "precision": 0.9088217414446191,
+              "recall": 0.9613113354897272,
+              "f1-score": 0.9315241634601921,
+              "support": 6880.0
+            },
+            "weighted avg": {
+              "precision": 0.9565482405792257,
+              "recall": 0.9486918604651163,
+              "f1-score": 0.9504908325794775,
+              "support": 6880.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "normal",
+              "congestion",
+              "device_failure"
+            ],
+            "matrix": [
+              [
+                4606,
+                37,
+                261
+              ],
+              [
+                1,
+                873,
+                22
+              ],
+              [
+                16,
+                16,
+                1048
+              ]
+            ]
+          }
+        },
+        {
+          "threshold": 0.6,
+          "accuracy_percent": 95.09,
+          "macro_f1_percent": 93.37,
+          "normal_samples": 4904,
+          "normal_false_positives": 279,
+          "normal_false_positive_rate_percent": 5.69,
+          "future_fault_samples": 1976,
+          "missed_future_faults": 21,
+          "future_fault_miss_rate_percent": 1.06,
+          "classification_report": {
+            "normal": {
+              "precision": 0.9954799827808868,
+              "recall": 0.9431076672104405,
+              "f1-score": 0.9685863874345549,
+              "support": 4904.0
+            },
+            "congestion": {
+              "precision": 0.9427645788336934,
+              "recall": 0.9743303571428571,
+              "f1-score": 0.9582875960482986,
+              "support": 896.0
+            },
+            "device_failure": {
+              "precision": 0.7981651376146789,
+              "recall": 0.9666666666666667,
+              "f1-score": 0.8743718592964824,
+              "support": 1080.0
+            },
+            "accuracy": 0.9508720930232558,
+            "macro avg": {
+              "precision": 0.912136566409753,
+              "recall": 0.9613682303399881,
+              "f1-score": 0.9337486142597786,
+              "support": 6880.0
+            },
+            "weighted avg": {
+              "precision": 0.9576408788977195,
+              "recall": 0.9508720930232558,
+              "f1-score": 0.9524556596044381,
+              "support": 6880.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "normal",
+              "congestion",
+              "device_failure"
+            ],
+            "matrix": [
+              [
+                4625,
+                37,
+                242
+              ],
+              [
+                1,
+                873,
+                22
+              ],
+              [
+                20,
+                16,
+                1044
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    "43": {
+      "test_samples": 6591,
+      "results": [
+        {
+          "threshold": 0.4,
+          "accuracy_percent": 93.38,
+          "macro_f1_percent": 91.9,
+          "normal_samples": 4201,
+          "normal_false_positives": 379,
+          "normal_false_positive_rate_percent": 9.02,
+          "future_fault_samples": 2390,
+          "missed_future_faults": 0,
+          "future_fault_miss_rate_percent": 0.0,
+          "classification_report": {
+            "normal": {
+              "precision": 1.0,
+              "recall": 0.9097833849083552,
+              "f1-score": 0.9527608126635921,
+              "support": 4201.0
+            },
+            "congestion": {
+              "precision": 0.9449339207048458,
+              "recall": 0.9676691729323308,
+              "f1-score": 0.9561664190193165,
+              "support": 1330.0
+            },
+            "device_failure": {
+              "precision": 0.7434257285003554,
+              "recall": 0.9867924528301887,
+              "f1-score": 0.8479935143899473,
+              "support": 1060.0
+            },
+            "accuracy": 0.9338491882870581,
+            "macro avg": {
+              "precision": 0.8961198830684004,
+              "recall": 0.9547483368902916,
+              "f1-score": 0.9189735820242854,
+              "support": 6591.0
+            },
+            "weighted avg": {
+              "precision": 0.9476245466162679,
+              "recall": 0.9338491882870581,
+              "f1-score": 0.9365987917688948,
+              "support": 6591.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "normal",
+              "congestion",
+              "device_failure"
+            ],
+            "matrix": [
+              [
+                3822,
+                61,
+                318
+              ],
+              [
+                0,
+                1287,
+                43
+              ],
+              [
+                0,
+                14,
+                1046
+              ]
+            ]
+          }
+        },
+        {
+          "threshold": 0.45,
+          "accuracy_percent": 93.48,
+          "macro_f1_percent": 91.99,
+          "normal_samples": 4201,
+          "normal_false_positives": 373,
+          "normal_false_positive_rate_percent": 8.88,
+          "future_fault_samples": 2390,
+          "missed_future_faults": 0,
+          "future_fault_miss_rate_percent": 0.0,
+          "classification_report": {
+            "normal": {
+              "precision": 1.0,
+              "recall": 0.9112116162818377,
+              "f1-score": 0.9535434051563084,
+              "support": 4201.0
+            },
+            "congestion": {
+              "precision": 0.9456282145481264,
+              "recall": 0.9676691729323308,
+              "f1-score": 0.9565217391304348,
+              "support": 1330.0
+            },
+            "device_failure": {
+              "precision": 0.746077032810271,
+              "recall": 0.9867924528301887,
+              "f1-score": 0.8497156783103168,
+              "support": 1060.0
+            },
+            "accuracy": 0.9347595205583371,
+            "macro avg": {
+              "precision": 0.8972350824527991,
+              "recall": 0.9552244140147857,
+              "f1-score": 0.9199269408656866,
+              "support": 6591.0
+            },
+            "weighted avg": {
+              "precision": 0.9481910453842961,
+              "recall": 0.9347595205583371,
+              "f1-score": 0.9374462717514892,
+              "support": 6591.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "normal",
+              "congestion",
+              "device_failure"
+            ],
+            "matrix": [
+              [
+                3828,
+                60,
+                313
+              ],
+              [
+                0,
+                1287,
+                43
+              ],
+              [
+                0,
+                14,
+                1046
+              ]
+            ]
+          }
+        },
+        {
+          "threshold": 0.5,
+          "accuracy_percent": 93.64,
+          "macro_f1_percent": 92.16,
+          "normal_samples": 4201,
+          "normal_false_positives": 360,
+          "normal_false_positive_rate_percent": 8.57,
+          "future_fault_samples": 2390,
+          "missed_future_faults": 2,
+          "future_fault_miss_rate_percent": 0.08,
+          "classification_report": {
+            "normal": {
+              "precision": 0.9994795732500651,
+              "recall": 0.9143061175910497,
+              "f1-score": 0.9549975136747887,
+              "support": 4201.0
+            },
+            "congestion": {
+              "precision": 0.9463235294117647,
+              "recall": 0.9676691729323308,
+              "f1-score": 0.9568773234200744,
+              "support": 1330.0
+            },
+            "device_failure": {
+              "precision": 0.7521613832853026,
+              "recall": 0.9849056603773585,
+              "f1-score": 0.8529411764705882,
+              "support": 1060.0
+            },
+            "accuracy": 0.936428463055682,
+            "macro avg": {
+              "precision": 0.8993214953157108,
+              "recall": 0.9556269836335797,
+              "f1-score": 0.9216053378551504,
+              "support": 6591.0
+            },
+            "weighted avg": {
+              "precision": 0.9489781592510379,
+              "recall": 0.936428463055682,
+              "f1-score": 0.9389635931050386,
+              "support": 6591.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "normal",
+              "congestion",
+              "device_failure"
+            ],
+            "matrix": [
+              [
+                3841,
+                59,
+                301
+              ],
+              [
+                0,
+                1287,
+                43
+              ],
+              [
+                2,
+                14,
+                1044
+              ]
+            ]
+          }
+        },
+        {
+          "threshold": 0.55,
+          "accuracy_percent": 93.66,
+          "macro_f1_percent": 92.17,
+          "normal_samples": 4201,
+          "normal_false_positives": 356,
+          "normal_false_positive_rate_percent": 8.47,
+          "future_fault_samples": 2390,
+          "missed_future_faults": 5,
+          "future_fault_miss_rate_percent": 0.21,
+          "classification_report": {
+            "normal": {
+              "precision": 0.9987012987012988,
+              "recall": 0.915258271840038,
+              "f1-score": 0.9551608495839026,
+              "support": 4201.0
+            },
+            "congestion": {
+              "precision": 0.9462840323767476,
+              "recall": 0.9669172932330827,
+              "f1-score": 0.9564894012644105,
+              "support": 1330.0
+            },
+            "device_failure": {
+              "precision": 0.7539797395079595,
+              "recall": 0.9830188679245283,
+              "f1-score": 0.8533988533988534,
+              "support": 1060.0
+            },
+            "accuracy": 0.9365801851008951,
+            "macro avg": {
+              "precision": 0.8996550235286686,
+              "recall": 0.9550648109992164,
+              "f1-score": 0.9216830347490554,
+              "support": 6591.0
+            },
+            "weighted avg": {
+              "precision": 0.9487665669524605,
+              "recall": 0.9365801851008951,
+              "f1-score": 0.9390630279754855,
+              "support": 6591.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "normal",
+              "congestion",
+              "device_failure"
+            ],
+            "matrix": [
+              [
+                3845,
+                59,
+                297
+              ],
+              [
+                1,
+                1286,
+                43
+              ],
+              [
+                4,
+                14,
+                1042
+              ]
+            ]
+          }
+        },
+        {
+          "threshold": 0.6,
+          "accuracy_percent": 93.87,
+          "macro_f1_percent": 92.37,
+          "normal_samples": 4201,
+          "normal_false_positives": 335,
+          "normal_false_positive_rate_percent": 7.97,
+          "future_fault_samples": 2390,
+          "missed_future_faults": 12,
+          "future_fault_miss_rate_percent": 0.5,
+          "classification_report": {
+            "normal": {
+              "precision": 0.9969056214543579,
+              "recall": 0.9202570816472269,
+              "f1-score": 0.9570491397450179,
+              "support": 4201.0
+            },
+            "congestion": {
+              "precision": 0.9497413155949741,
+              "recall": 0.9661654135338346,
+              "f1-score": 0.9578829668281774,
+              "support": 1330.0
+            },
+            "device_failure": {
+              "precision": 0.7617647058823529,
+              "recall": 0.9773584905660377,
+              "f1-score": 0.856198347107438,
+              "support": 1060.0
+            },
+            "accuracy": 0.9387042937338795,
+            "macro avg": {
+              "precision": 0.9028038809772282,
+              "recall": 0.9545936619156997,
+              "f1-score": 0.9237101512268778,
+              "support": 6591.0
+            },
+            "weighted avg": {
+              "precision": 0.949571696814803,
+              "recall": 0.9387042937338795,
+              "f1-score": 0.9409980321475013,
+              "support": 6591.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "normal",
+              "congestion",
+              "device_failure"
+            ],
+            "matrix": [
+              [
+                3866,
+                54,
+                281
+              ],
+              [
+                2,
+                1285,
+                43
+              ],
+              [
+                10,
+                14,
+                1036
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    "44": {
+      "test_samples": 6620,
+      "results": [
+        {
+          "threshold": 0.4,
+          "accuracy_percent": 94.91,
+          "macro_f1_percent": 93.56,
+          "normal_samples": 4372,
+          "normal_false_positives": 276,
+          "normal_false_positive_rate_percent": 6.31,
+          "future_fault_samples": 2248,
+          "missed_future_faults": 11,
+          "future_fault_miss_rate_percent": 0.49,
+          "classification_report": {
+            "normal": {
+              "precision": 0.9973216459702946,
+              "recall": 0.9368709972552608,
+              "f1-score": 0.9661516688288714,
+              "support": 4372.0
+            },
+            "congestion": {
+              "precision": 0.9339130434782609,
+              "recall": 0.9693140794223827,
+              "f1-score": 0.9512843224092117,
+              "support": 1108.0
+            },
+            "device_failure": {
+              "precision": 0.8165810711665444,
+              "recall": 0.9763157894736842,
+              "f1-score": 0.8893328006392329,
+              "support": 1140.0
+            },
+            "accuracy": 0.9490936555891238,
+            "macro avg": {
+              "precision": 0.9159385868716999,
+              "recall": 0.9608336220504426,
+              "f1-score": 0.9355895972924385,
+              "support": 6620.0
+            },
+            "weighted avg": {
+              "precision": 0.9555843367803476,
+              "recall": 0.9490936555891238,
+              "f1-score": 0.9504346704045253,
+              "support": 6620.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "normal",
+              "congestion",
+              "device_failure"
+            ],
+            "matrix": [
+              [
+                4096,
+                60,
+                216
+              ],
+              [
+                0,
+                1074,
+                34
+              ],
+              [
+                11,
+                16,
+                1113
+              ]
+            ]
+          }
+        },
+        {
+          "threshold": 0.45,
+          "accuracy_percent": 95.08,
+          "macro_f1_percent": 93.71,
+          "normal_samples": 4372,
+          "normal_false_positives": 256,
+          "normal_false_positive_rate_percent": 5.86,
+          "future_fault_samples": 2248,
+          "missed_future_faults": 20,
+          "future_fault_miss_rate_percent": 0.89,
+          "classification_report": {
+            "normal": {
+              "precision": 0.995164410058027,
+              "recall": 0.9414455626715462,
+              "f1-score": 0.9675599435825106,
+              "support": 4372.0
+            },
+            "congestion": {
+              "precision": 0.9339130434782609,
+              "recall": 0.9693140794223827,
+              "f1-score": 0.9512843224092117,
+              "support": 1108.0
+            },
+            "device_failure": {
+              "precision": 0.8275862068965517,
+              "recall": 0.968421052631579,
+              "f1-score": 0.8924818108326596,
+              "support": 1140.0
+            },
+            "accuracy": 0.9507552870090634,
+            "macro avg": {
+              "precision": 0.9188878868109466,
+              "recall": 0.9597268982418359,
+              "f1-score": 0.9371086922747941,
+              "support": 6620.0
+            },
+            "weighted avg": {
+              "precision": 0.9560547928715523,
+              "recall": 0.9507552870090634,
+              "f1-score": 0.9519070040666728,
+              "support": 6620.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "normal",
+              "congestion",
+              "device_failure"
+            ],
+            "matrix": [
+              [
+                4116,
+                60,
+                196
+              ],
+              [
+                0,
+                1074,
+                34
+              ],
+              [
+                20,
+                16,
+                1104
+              ]
+            ]
+          }
+        },
+        {
+          "threshold": 0.5,
+          "accuracy_percent": 95.02,
+          "macro_f1_percent": 93.59,
+          "normal_samples": 4372,
+          "normal_false_positives": 241,
+          "normal_false_positive_rate_percent": 5.51,
+          "future_fault_samples": 2248,
+          "missed_future_faults": 39,
+          "future_fault_miss_rate_percent": 1.73,
+          "classification_report": {
+            "normal": {
+              "precision": 0.9906474820143885,
+              "recall": 0.9448764867337603,
+              "f1-score": 0.9672207913837508,
+              "support": 4372.0
+            },
+            "congestion": {
+              "precision": 0.9339130434782609,
+              "recall": 0.9693140794223827,
+              "f1-score": 0.9512843224092117,
+              "support": 1108.0
+            },
+            "device_failure": {
+              "precision": 0.8346153846153846,
+              "recall": 0.9517543859649122,
+              "f1-score": 0.889344262295082,
+              "support": 1140.0
+            },
+            "accuracy": 0.9501510574018127,
+            "macro avg": {
+              "precision": 0.9197253033693448,
+              "recall": 0.9553149840403518,
+              "f1-score": 0.9359497920293481,
+              "support": 6620.0
+            },
+            "weighted avg": {
+              "precision": 0.954282172507909,
+              "recall": 0.9501510574018127,
+              "f1-score": 0.9511427172470632,
+              "support": 6620.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "normal",
+              "congestion",
+              "device_failure"
+            ],
+            "matrix": [
+              [
+                4131,
+                60,
+                181
+              ],
+              [
+                0,
+                1074,
+                34
+              ],
+              [
+                39,
+                16,
+                1085
+              ]
+            ]
+          }
+        },
+        {
+          "threshold": 0.55,
+          "accuracy_percent": 94.95,
+          "macro_f1_percent": 93.5,
+          "normal_samples": 4372,
+          "normal_false_positives": 233,
+          "normal_false_positive_rate_percent": 5.33,
+          "future_fault_samples": 2248,
+          "missed_future_faults": 52,
+          "future_fault_miss_rate_percent": 2.31,
+          "classification_report": {
+            "normal": {
+              "precision": 0.987592460033405,
+              "recall": 0.9467063129002745,
+              "f1-score": 0.9667172719841177,
+              "support": 4372.0
+            },
+            "congestion": {
+              "precision": 0.9339130434782609,
+              "recall": 0.9693140794223827,
+              "f1-score": 0.9512843224092117,
+              "support": 1108.0
+            },
+            "device_failure": {
+              "precision": 0.8389366692728695,
+              "recall": 0.9412280701754386,
+              "f1-score": 0.8871434477056634,
+              "support": 1140.0
+            },
+            "accuracy": 0.9495468277945619,
+            "macro avg": {
+              "precision": 0.9201473909281784,
+              "recall": 0.9524161541660319,
+              "f1-score": 0.935048347366331,
+              "support": 6620.0
+            },
+            "weighted avg": {
+              "precision": 0.9530087145635998,
+              "recall": 0.9495468277945619,
+              "f1-score": 0.9504311892339011,
+              "support": 6620.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "normal",
+              "congestion",
+              "device_failure"
+            ],
+            "matrix": [
+              [
+                4139,
+                60,
+                173
+              ],
+              [
+                1,
+                1074,
+                33
+              ],
+              [
+                51,
+                16,
+                1073
+              ]
+            ]
+          }
+        },
+        {
+          "threshold": 0.6,
+          "accuracy_percent": 95.11,
+          "macro_f1_percent": 93.66,
+          "normal_samples": 4372,
+          "normal_false_positives": 215,
+          "normal_false_positive_rate_percent": 4.92,
+          "future_fault_samples": 2248,
+          "missed_future_faults": 61,
+          "future_fault_miss_rate_percent": 2.71,
+          "classification_report": {
+            "normal": {
+              "precision": 0.985538169748696,
+              "recall": 0.9508234217749314,
+              "f1-score": 0.9678696158323632,
+              "support": 4372.0
+            },
+            "congestion": {
+              "precision": 0.93717277486911,
+              "recall": 0.9693140794223827,
+              "f1-score": 0.9529724933451642,
+              "support": 1108.0
+            },
+            "device_failure": {
+              "precision": 0.8479299363057324,
+              "recall": 0.9342105263157895,
+              "f1-score": 0.8889816360601002,
+              "support": 1140.0
+            },
+            "accuracy": 0.9510574018126888,
+            "macro avg": {
+              "precision": 0.9235469603078462,
+              "recall": 0.9514493425043679,
+              "f1-score": 0.9366079150792093,
+              "support": 6620.0
+            },
+            "weighted avg": {
+              "precision": 0.9537462900430222,
+              "recall": 0.9510574018126888,
+              "f1-score": 0.951791321473421,
+              "support": 6620.0
+            }
+          },
+          "confusion_matrix": {
+            "labels": [
+              "normal",
+              "congestion",
+              "device_failure"
+            ],
+            "matrix": [
+              [
+                4157,
+                56,
+                159
+              ],
+              [
+                2,
+                1074,
+                32
+              ],
+              [
+                59,
+                16,
+                1065
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "aggregate_results": [
+    {
+      "threshold": 0.4,
+      "accuracy_percent": 94.18,
+      "macro_f1_percent": 92.66,
+      "normal_samples": 13477,
+      "normal_false_positives": 1005,
+      "normal_false_positive_rate_percent": 7.46,
+      "future_fault_samples": 6614,
+      "missed_future_faults": 19,
+      "future_fault_miss_rate_percent": 0.29,
+      "classification_report": {
+        "normal": {
+          "precision": 0.9984789048114643,
+          "recall": 0.9254285078281517,
+          "f1-score": 0.9605668515095502,
+          "support": 13477.0
+        },
+        "congestion": {
+          "precision": 0.9406631762652705,
+          "recall": 0.97000599880024,
+          "f1-score": 0.9551092734790313,
+          "support": 3334.0
+        },
+        "device_failure": {
+          "precision": 0.7724651609802979,
+          "recall": 0.9801829268292683,
+          "f1-score": 0.8640150497178178,
+          "support": 3280.0
+        },
+        "accuracy": 0.9417649693892788,
+        "macro avg": {
+          "precision": 0.9038690806856776,
+          "recall": 0.9585391444858867,
+          "f1-score": 0.9265637249021331,
+          "support": 20091.0
+        },
+        "weighted avg": {
+          "precision": 0.9519863101800754,
+          "recall": 0.9417649693892788,
+          "f1-score": 0.9438984191253668,
+          "support": 20091.0
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "normal",
+          "congestion",
+          "device_failure"
+        ],
+        "matrix": [
+          [
+            12472,
+            158,
+            847
+          ],
+          [
+            0,
+            3234,
+            100
+          ],
+          [
+            19,
+            46,
+            3215
+          ]
+        ]
+      }
+    },
+    {
+      "threshold": 0.45,
+      "accuracy_percent": 94.31,
+      "macro_f1_percent": 92.78,
+      "normal_samples": 13477,
+      "normal_false_positives": 966,
+      "normal_false_positive_rate_percent": 7.17,
+      "future_fault_samples": 6614,
+      "missed_future_faults": 31,
+      "future_fault_miss_rate_percent": 0.47,
+      "classification_report": {
+        "normal": {
+          "precision": 0.997528304895551,
+          "recall": 0.9283223269273577,
+          "f1-score": 0.9616818478803951,
+          "support": 13477.0
+        },
+        "congestion": {
+          "precision": 0.9409368635437881,
+          "recall": 0.97000599880024,
+          "f1-score": 0.9552503322995126,
+          "support": 3334.0
+        },
+        "device_failure": {
+          "precision": 0.7789396887159533,
+          "recall": 0.9765243902439025,
+          "f1-score": 0.8666125541125541,
+          "support": 3280.0
+        },
+        "accuracy": 0.9431088547110646,
+        "macro avg": {
+          "precision": 0.9058016190517643,
+          "recall": 0.9582842386571667,
+          "f1-score": 0.927848244764154,
+          "support": 20091.0
+        },
+        "weighted avg": {
+          "precision": 0.9524510799422954,
+          "recall": 0.9431088547110646,
+          "f1-score": 0.9450938255567088,
+          "support": 20091.0
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "normal",
+          "congestion",
+          "device_failure"
+        ],
+        "matrix": [
+          [
+            12511,
+            157,
+            809
+          ],
+          [
+            0,
+            3234,
+            100
+          ],
+          [
+            31,
+            46,
+            3203
+          ]
+        ]
+      }
+    },
+    {
+      "threshold": 0.5,
+      "accuracy_percent": 94.43,
+      "macro_f1_percent": 92.89,
+      "normal_samples": 13477,
+      "normal_false_positives": 920,
+      "normal_false_positive_rate_percent": 6.83,
+      "future_fault_samples": 6614,
+      "missed_future_faults": 54,
+      "future_fault_miss_rate_percent": 0.82,
+      "classification_report": {
+        "normal": {
+          "precision": 0.9957180239473475,
+          "recall": 0.9317355494546264,
+          "f1-score": 0.9626648267402638,
+          "support": 13477.0
+        },
+        "congestion": {
+          "precision": 0.9412107101280559,
+          "recall": 0.97000599880024,
+          "f1-score": 0.9553914327917282,
+          "support": 3334.0
+        },
+        "device_failure": {
+          "precision": 0.786597428288823,
+          "recall": 0.9698170731707317,
+          "f1-score": 0.8686510103768432,
+          "support": 3280.0
+        },
+        "accuracy": 0.944303419441541,
+        "macro avg": {
+          "precision": 0.9078420541214088,
+          "recall": 0.957186207141866,
+          "f1-score": 0.928902423302945,
+          "support": 20091.0
+        },
+        "weighted avg": {
+          "precision": 0.9525323717631118,
+          "recall": 0.944303419441541,
+          "f1-score": 0.9461094132169728,
+          "support": 20091.0
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "normal",
+          "congestion",
+          "device_failure"
+        ],
+        "matrix": [
+          [
+            12557,
+            156,
+            764
+          ],
+          [
+            1,
+            3234,
+            99
+          ],
+          [
+            53,
+            46,
+            3181
+          ]
+        ]
+      }
+    },
+    {
+      "threshold": 0.55,
+      "accuracy_percent": 94.5,
+      "macro_f1_percent": 92.95,
+      "normal_samples": 13477,
+      "normal_false_positives": 887,
+      "normal_false_positive_rate_percent": 6.58,
+      "future_fault_samples": 6614,
+      "missed_future_faults": 74,
+      "future_fault_miss_rate_percent": 1.12,
+      "classification_report": {
+        "normal": {
+          "precision": 0.9941566645609602,
+          "recall": 0.9341841656154931,
+          "f1-score": 0.9632378256378868,
+          "support": 13477.0
+        },
+        "congestion": {
+          "precision": 0.9411935953420669,
+          "recall": 0.9697060587882423,
+          "f1-score": 0.9552371103560349,
+          "support": 3334.0
+        },
+        "device_failure": {
+          "precision": 0.7923346693386774,
+          "recall": 0.964329268292683,
+          "f1-score": 0.8699119911991199,
+          "support": 3280.0
+        },
+        "accuracy": 0.9450002488676522,
+        "macro avg": {
+          "precision": 0.9092283097472348,
+          "recall": 0.9560731642321395,
+          "f1-score": 0.9294623090643471,
+          "support": 20091.0
+        },
+        "weighted avg": {
+          "precision": 0.9524188208943992,
+          "recall": 0.9450002488676522,
+          "f1-score": 0.9466740348007534,
+          "support": 20091.0
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "normal",
+          "congestion",
+          "device_failure"
+        ],
+        "matrix": [
+          [
+            12590,
+            156,
+            731
+          ],
+          [
+            3,
+            3233,
+            98
+          ],
+          [
+            71,
+            46,
+            3163
+          ]
+        ]
+      }
+    },
+    {
+      "threshold": 0.6,
+      "accuracy_percent": 94.69,
+      "macro_f1_percent": 93.14,
+      "normal_samples": 13477,
+      "normal_false_positives": 829,
+      "normal_false_positive_rate_percent": 6.15,
+      "future_fault_samples": 6614,
+      "missed_future_faults": 94,
+      "future_fault_miss_rate_percent": 1.42,
+      "classification_report": {
+        "normal": {
+          "precision": 0.9926228221629257,
+          "recall": 0.9384877940194405,
+          "f1-score": 0.9647965216064686,
+          "support": 13477.0
+        },
+        "congestion": {
+          "precision": 0.9436496350364963,
+          "recall": 0.9694061187762447,
+          "f1-score": 0.9563544903092174,
+          "support": 3334.0
+        },
+        "device_failure": {
+          "precision": 0.8014780835881753,
+          "recall": 0.9588414634146342,
+          "f1-score": 0.8731260410882843,
+          "support": 3280.0
+        },
+        "accuracy": 0.9469414165546762,
+        "macro avg": {
+          "precision": 0.9125835135958659,
+          "recall": 0.9555784587367732,
+          "f1-score": 0.9314256843346568,
+          "support": 20091.0
+        },
+        "weighted avg": {
+          "precision": 0.9532902180912171,
+          "recall": 0.9469414165546762,
+          "f1-score": 0.9484297450177135,
+          "support": 20091.0
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "normal",
+          "congestion",
+          "device_failure"
+        ],
+        "matrix": [
+          [
+            12648,
+            147,
+            682
+          ],
+          [
+            5,
+            3232,
+            97
+          ],
+          [
+            89,
+            46,
+            3145
+          ]
+        ]
+      }
+    }
+  ]
+}

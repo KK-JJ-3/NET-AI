@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from numpy.lib.stride_tricks import sliding_window_view
 
+from app.forecast_config import FORECAST_HORIZON_MINUTES
 from simulator.dataset import generate_dataset
 from training.fault_thresholds import find_fault_index
 
@@ -18,8 +19,8 @@ BASE_FEATURE_COLUMNS = [
     "availability",
 ]
 
-# Forecast whether a fault begins within the next 10 minutes.
-FUTURE_HORIZON_MINUTES = 10
+# Backwards-compatible alias for the shared training/inference horizon.
+FUTURE_HORIZON_MINUTES = FORECAST_HORIZON_MINUTES
 
 FAULT_LABELS = {"congestion", "device_failure"}
 
@@ -214,9 +215,12 @@ def build_training_features(
         # Build records from precomputed NumPy arrays, avoiding repeated .iloc,
         # window DataFrames, and np.polyfit calls for every single sample.
         for position, target_label in zip(selected_positions, target_labels):
-            record: dict[str, float | int | str] = {
+            record: dict[str, float | int | str | bool] = {
                 "episode_id": int(episode_id),
                 "target_label": str(target_label),
+                # Baselines must represent stable healthy scenarios only.
+                # Do not include pre-fault drift or post-fault recovery.
+                "baseline_eligible": fault_type == "normal",
             }
             for feature_name, values in feature_arrays.items():
                 record[feature_name] = float(values[position])
@@ -237,7 +241,8 @@ def prepare_dataset(
     future_horizon_minutes: int = FUTURE_HORIZON_MINUTES,
     duration_minutes: int = 60,
     episodes_per_class: int = 100,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+    return_baseline_mask: bool = False,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series] | tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series, pd.Series]:
     """Prepare future-labeled data with a split by episode.
 
     ``episodes_per_class`` controls how many independent synthetic episodes
@@ -272,7 +277,7 @@ def prepare_dataset(
     train_data = feature_data.loc[~test_mask].reset_index(drop=True)
     test_data = feature_data.loc[test_mask].reset_index(drop=True)
 
-    metadata_columns = {"episode_id", "target_label"}
+    metadata_columns = {"episode_id", "target_label", "baseline_eligible"}
     feature_columns = [
         column for column in feature_data.columns
         if column not in metadata_columns
@@ -282,5 +287,9 @@ def prepare_dataset(
     x_test = test_data[feature_columns].copy()
     y_train = train_data["target_label"].copy()
     y_test = test_data["target_label"].copy()
+
+    if return_baseline_mask:
+        baseline_mask = train_data["baseline_eligible"].astype(bool).reset_index(drop=True)
+        return x_train, x_test, y_train, y_test, baseline_mask
 
     return x_train, x_test, y_train, y_test

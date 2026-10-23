@@ -3,11 +3,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from app.forecast_config import FORECAST_HORIZON_MINUTES
 
-# This must match the horizon used by training/prepare.py
-# and training/train_models.py.
-FORECAST_HORIZON_MINUTES = 10
 
+# The shared horizon must match the labels used to train the saved models.
 
 @dataclass(frozen=True)
 class RiskResult:

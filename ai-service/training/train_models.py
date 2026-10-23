@@ -13,6 +13,7 @@ from sklearn.metrics import (
     confusion_matrix,
 )
 
+from app.forecast_config import FORECAST_HORIZON_MINUTES
 from app.models.anomaly import AnomalyDetector
 from app.models.classifier import FaultClassifier
 from app.prediction import build_prediction
@@ -34,7 +35,7 @@ EVALUATION_PATH = MODEL_DIR / "evaluation_results.json"
 
 RANDOM_SEED = 42
 WINDOW_SIZE = 15
-FUTURE_HORIZON_MINUTES = 10
+FUTURE_HORIZON_MINUTES = FORECAST_HORIZON_MINUTES
 EPISODE_DURATION_MINUTES = 60
 EPISODES_PER_CLASS = 300
 
@@ -301,16 +302,29 @@ def save_feature_importance(
 def save_normal_baseline(
     x_train_with_anomaly: pd.DataFrame,
     y_train: pd.Series,
+    baseline_eligible_mask: pd.Series | np.ndarray | None = None,
 ) -> None:
-    """Save mean features for training examples labelled normal."""
+    """Save a baseline from stable healthy training episodes only.
+
+    ``baseline_eligible_mask`` is produced by ``prepare_dataset`` and is true
+    only for explicitly normal scenarios. The target-label check is retained
+    as a defensive guard so a future-fault target can never enter the baseline.
+    """
 
     labels = normalize_labels(y_train)
+    normal_mask = labels.eq("normal").to_numpy(copy=True)
 
-    normal_mask = labels.eq("normal").to_numpy()
+    if baseline_eligible_mask is not None:
+        eligible = np.asarray(baseline_eligible_mask, dtype=bool)
+        if len(eligible) != len(x_train_with_anomaly):
+            raise ValueError(
+                "Baseline eligibility mask length must match training rows."
+            )
+        normal_mask &= eligible
 
     if not normal_mask.any():
         raise ValueError(
-            "No normal training examples are available for the baseline."
+            "No stable healthy training examples are available for the baseline."
         )
 
     normal_rows = x_train_with_anomaly.loc[normal_mask]
@@ -353,12 +367,14 @@ def train_models() -> None:
         x_test,
         y_train,
         y_test,
+        baseline_eligible_mask,
     ) = prepare_dataset(
         random_seed=RANDOM_SEED,
         window_size=WINDOW_SIZE,
         future_horizon_minutes=FUTURE_HORIZON_MINUTES,
         duration_minutes=EPISODE_DURATION_MINUTES,
         episodes_per_class=EPISODES_PER_CLASS,
+        return_baseline_mask=True,
     )
 
     y_train = normalize_labels(y_train)
@@ -493,6 +509,7 @@ def train_models() -> None:
     save_normal_baseline(
         x_train_with_anomaly=x_train_with_anomaly,
         y_train=y_train,
+        baseline_eligible_mask=baseline_eligible_mask,
     )
 
     EVALUATION_PATH.write_text(
