@@ -54,6 +54,7 @@ export async function createTelemetry(
     const duplicateTelemetry = await prisma.telemetry.findFirst({
       where: {
         deviceId,
+        interfaceId: interfaceId ?? null,
         recordedAt: new Date(recordedAt),
       },
       select: { id: true },
@@ -62,7 +63,7 @@ export async function createTelemetry(
     if (duplicateTelemetry) {
       return sendError(
         res,
-        "Telemetry already exists for this device and timestamp",
+        "Telemetry already exists for this device, interface, and timestamp",
         409,
       );
     }

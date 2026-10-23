@@ -62,3 +62,34 @@ def test_inference_rejects_non_finite_metric():
         match="Telemetry point 0 has non-finite 'latency_ms'",
     ):
         _make_predictor().predict(window)
+
+@pytest.mark.parametrize("interval", [timedelta(seconds=30), timedelta(minutes=2)])
+def test_inference_rejects_irregular_reading_intervals(interval):
+    window = _make_window()
+    start = window[0].recorded_at
+    for index, point in enumerate(window):
+        point.recorded_at = start + interval * index
+
+    with pytest.raises(
+        ValueError,
+        match="Telemetry readings must be approximately 60 seconds apart",
+    ):
+        _make_predictor().predict(window)
+
+
+def test_inference_rejects_duplicate_timestamps():
+    window = _make_window()
+    window[5].recorded_at = window[4].recorded_at
+
+    with pytest.raises(
+        ValueError,
+        match="Telemetry readings must be approximately 60 seconds apart",
+    ):
+        _make_predictor().predict(window)
+
+
+def test_inference_accepts_one_minute_reading_intervals():
+    result = _make_predictor().predict(_make_window())
+
+    assert result.fault_type == "device_failure"
+    assert result.risk_score == 1.0

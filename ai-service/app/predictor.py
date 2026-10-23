@@ -26,6 +26,8 @@ class FaultPredictor:
     """
 
     MIN_WINDOW_SIZE = 15
+    EXPECTED_READING_INTERVAL_SECONDS = 60
+    READING_INTERVAL_TOLERANCE_SECONDS = 5
 
     # Keep these thresholds consistent with training/fault_thresholds.py.
     CONGESTION_UTILIZATION_THRESHOLD = 90.0
@@ -60,6 +62,26 @@ class FaultPredictor:
             window,
             key=lambda point: point.recorded_at,
         )
+
+        # The trained feature slopes assume readings are approximately
+        # one minute apart. Reject irregular windows rather than silently
+        # producing predictions from a different sampling cadence.
+        expected_interval = self.EXPECTED_READING_INTERVAL_SECONDS
+        tolerance = self.READING_INTERVAL_TOLERANCE_SECONDS
+        for index, (previous, current) in enumerate(
+            zip(ordered_window, ordered_window[1:])
+        ):
+            interval_seconds = (
+                current.recorded_at - previous.recorded_at
+            ).total_seconds()
+            if abs(interval_seconds - expected_interval) > tolerance:
+                raise ValueError(
+                    "Telemetry readings must be approximately "
+                    f"{expected_interval} seconds apart; points "
+                    f"{index} and {index + 1} are "
+                    f"{interval_seconds:g} seconds apart"
+                )
+
         for index, point in enumerate(ordered_window):
             for field in BASE_FEATURE_FIELDS:
                 value = getattr(point, field)

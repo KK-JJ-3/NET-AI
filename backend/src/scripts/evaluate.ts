@@ -1,4 +1,5 @@
 import prisma from "../config/database.js";
+import { findMissedFaults } from "../services/missedFaultService.js";
 
 type OutcomeRecord = {
   outcome: "confirmed" | "false_positive";
@@ -128,28 +129,22 @@ async function main() {
     (row) => row.outcome === "false_positive",
   ).length;
 
-  // A fault is covered by a forecast only when the outcome linked that exact fault.
-  const forecastCoveredFaultIds = new Set(
-    forecastOutcomes
-      .filter((row) => row.outcome === "confirmed" && row.fault)
-      .map((row) => row.fault!.id),
-  );
-  const forecastFaults = faults.filter((fault) =>
-    forecastOutcomes.some(
-      (row) =>
-        row.prediction.deviceId === fault.deviceId &&
-        row.prediction.faultType === fault.faultType &&
-        fault.startedAt >= row.prediction.predictedAt &&
-        fault.startedAt <=
-          new Date(
-            row.prediction.predictedAt.getTime() +
-              row.prediction.predictedWindowMinutes * 60_000,
-          ),
-    ),
-  );
-  const forecastFn = forecastFaults.filter(
-    (fault) => !forecastCoveredFaultIds.has(fault.id),
-  ).length;
+  // Count every fault that had no valid earlier forecast, including faults
+  // that fell outside all evaluated outcome windows.
+  const missedForecastFaults = await findMissedFaults();
+  const forecastFn = missedForecastFaults.length;
+  const coveredFaultCount = Math.max(0, faults.length - forecastFn);
+  const forecastPrecision = ratio(forecastTp, forecastTp + forecastFp);
+  const forecastRecall = ratio(coveredFaultCount, faults.length);
+  const forecastF1 =
+    forecastPrecision === null ||
+    forecastRecall === null ||
+    forecastPrecision + forecastRecall === 0
+      ? forecastPrecision === 0 && forecastRecall === 0
+        ? 0
+        : null
+      : (2 * forecastPrecision * forecastRecall) /
+        (forecastPrecision + forecastRecall);
 
   const leadTimes = forecastOutcomes
     .filter((row) => row.outcome === "confirmed" && row.fault)
@@ -207,8 +202,12 @@ async function main() {
     },
     forecasts: {
       definition:
-        "Forecast predictions evaluated by the outcome job; active-fault detections are excluded.",
+        "Forecast predictions evaluated by the outcome job; active-fault detections are excluded. Precision is forecast-outcome based; recall is based on coverage of all recorded faults.",
       ...classificationMetrics(forecastTp, forecastFp, forecastFn),
+      recall: forecastRecall,
+      f1: forecastF1,
+      coveredFaults: coveredFaultCount,
+      totalFaults: faults.length,
       averageLeadTimeMinutes: averageLeadMinutes,
       leadTimeSamples: leadTimes.length,
       missedFaults: forecastFn,
@@ -228,7 +227,7 @@ async function main() {
     caveats: [
       "Metrics are computed from current database records and the stored outcome labels.",
       "The forecast false-positive rate here is FP / (TP + FP), i.e. the false-discovery proportion among evaluated forecasts; true-negative telemetry windows are not stored as forecast outcomes, so a conventional FPR cannot be calculated.",
-      "Forecast missed faults count recorded faults that fell within at least one evaluated forecast window but were not linked to a confirmed forecast outcome. Faults outside all evaluated windows are not counted in this forecast FN value.",
+      "Forecast recall measures recorded-fault coverage: (total recorded faults - findMissedFaults().length) / total recorded faults. Forecast precision uses evaluated forecast outcomes, while recall uses fault records, so interpret these as complementary operational metrics rather than a single-window confusion matrix.",
       "Detection matching requires same device and fault type and the fault to be active at the detection timestamp.",
       "All simulator-generated data is synthetic; small samples can make metrics unstable.",
     ],
@@ -244,7 +243,7 @@ async function main() {
     `Precision: ${metric(report.forecasts.precision)} | Recall: ${metric(report.forecasts.recall)} | F1: ${metric(report.forecasts.f1)}`,
   );
   console.log(
-    `False-discovery proportion: ${metric(report.forecasts.falsePositiveRate)} | Avg lead time: ${averageLeadMinutes === null ? "N/A" : `${averageLeadMinutes.toFixed(2)} min`} | Missed faults in evaluated windows: ${forecastFn}`,
+    `False-discovery proportion: ${metric(report.forecasts.falsePositiveRate)} | Covered faults: ${coveredFaultCount}/${faults.length} | Avg lead time: ${averageLeadMinutes === null ? "N/A" : `${averageLeadMinutes.toFixed(2)} min`} | Missed faults overall: ${forecastFn}`,
   );
   console.log("\nACTIVE DETECTIONS");
   console.log(
