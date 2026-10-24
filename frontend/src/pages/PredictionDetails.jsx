@@ -235,9 +235,16 @@ function PredictionDetails({ prediction, onBack }) {
     prediction.riskScore,
   );
 
+  const rawExplanation = prediction.explanationText || "";
+  const isActiveFaultDetection =
+    /^\[(?:ACTIVE_FAULT_DETECTION|RULE_BASED)\]/.test(rawExplanation);
+  const detectionType = isActiveFaultDetection
+    ? "Active fault detection"
+    : "Future forecast";
   const explanation = (
-    prediction.explanationText || getFallbackExplanation(prediction)
+    rawExplanation || getFallbackExplanation(prediction)
   ).replace(/^\[(?:ACTIVE_FAULT_DETECTION|RULE_BASED)\]\s*/, "");
+  const deviceName = prediction.device?.name || prediction.deviceName || null;
 
   return (
     <div className="page-scroll">
@@ -255,10 +262,24 @@ function PredictionDetails({ prediction, onBack }) {
           <div>
             <span className="page-eyebrow">PREDICTION #{prediction.id}</span>
 
-            <h1>{formatFaultType(prediction.faultType)}</h1>
+            <div className="prediction-detail-title-row">
+              <h1>{formatFaultType(prediction.faultType)}</h1>
+              <span
+                className={`prediction-detection-type ${isActiveFaultDetection ? "active" : "forecast"}`}
+              >
+                {isActiveFaultDetection ? (
+                  <TriangleAlert size={14} aria-hidden="true" />
+                ) : (
+                  <Clock3 size={14} aria-hidden="true" />
+                )}
+                {detectionType}
+              </span>
+            </div>
 
             <p>
-              Detailed information for the selected network fault prediction.
+              {isActiveFaultDetection
+                ? "An active fault has been detected from current telemetry."
+                : "Review the forecasted fault risk and its contributing telemetry."}
             </p>
           </div>
 
@@ -286,9 +307,10 @@ function PredictionDetails({ prediction, onBack }) {
             </strong>
           </div>
 
-          <div className="prediction-detail-card">
+          <div className="prediction-detail-card prediction-detail-device-card">
             <span>Device</span>
-            <strong>#{prediction.deviceId}</strong>
+            <strong>{deviceName || `Device #${prediction.deviceId}`}</strong>
+            <small>Device #{prediction.deviceId}</small>
           </div>
         </section>
 
@@ -415,12 +437,8 @@ function PredictionDetails({ prediction, onBack }) {
 
             <p className="prediction-ai-footnote">
               Threshold comparisons are shown only where a configured threshold
-              is available. Forecast risk uses temperature-scaled model
-              probabilities fitted on held-out synthetic episodes; it is not a
-              verified real-world fault probability. A 100% score tagged as
-              [ACTIVE_FAULT_DETECTION] is a rule-based detection of an already
-              active fault, not a forecast. The 20-minute prediction window is a
-              forecast horizon, not an estimated time-to-fault.
+              is available. A risk score is the model's estimated risk, not a
+              guarantee that a fault will occur.
             </p>
           </div>
         </section>

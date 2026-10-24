@@ -7,23 +7,13 @@ import { getPrediction, getPredictions } from "../api/client";
 import PredictionDetails from "./PredictionDetails";
 import { useMonitoringUpdates } from "../hooks/useMonitoringUpdates";
 
-const STATUS_FILTERS = [
-  {
-    id: "all",
-    label: "All",
-  },
-  {
-    id: "pending",
-    label: "Pending",
-  },
-  {
-    id: "confirmed",
-    label: "Confirmed",
-  },
-  {
-    id: "false_positive",
-    label: "False Positive",
-  },
+const PREDICTION_FILTERS = [
+  { id: "all", label: "All" },
+  { id: "forecast", label: "Future Forecasts" },
+  { id: "active_detection", label: "Active Fault Detection" },
+  { id: "pending", label: "Pending" },
+  { id: "confirmed", label: "Confirmed" },
+  { id: "false_positive", label: "False Positive" },
 ];
 
 const ACTIVE_DETECTION_PREFIXES = ["[ACTIVE_FAULT_DETECTION]", "[RULE_BASED]"];
@@ -136,8 +126,8 @@ function Predictions() {
 
         if (!silent) setError("");
 
-        // Always load the full set so summary counts remain independent of the
-        // selected status filter. Filtering is performed locally below.
+        // Keep the complete history in memory. Category/status filters are local
+        // so switching sections never drops older records or changes totals.
         const data = await getPredictions();
         setPredictions(Array.isArray(data) ? data : []);
       } catch (err) {
@@ -247,10 +237,13 @@ function Predictions() {
 
   const filteredPredictions = useMemo(
     () =>
-      predictions.filter(
-        (prediction) =>
-          activeFilter === "all" || prediction.status === activeFilter,
-      ),
+      predictions.filter((prediction) => {
+        if (activeFilter === "all") return true;
+        if (activeFilter === "forecast") return !isActiveDetection(prediction);
+        if (activeFilter === "active_detection")
+          return isActiveDetection(prediction);
+        return prediction.status === activeFilter;
+      }),
     [predictions, activeFilter],
   );
 
@@ -384,7 +377,7 @@ function Predictions() {
         </section>
 
         <div className="prediction-filters" aria-label="Prediction status">
-          {STATUS_FILTERS.map((filter) => (
+          {PREDICTION_FILTERS.map((filter) => (
             <button
               key={filter.id}
               type="button"
@@ -440,11 +433,11 @@ function Predictions() {
               <ShieldAlert size={22} aria-hidden="true" />
             </div>
 
-            <h2>No predictions available</h2>
+            <h2>No matching records</h2>
 
             <p>
-              No forecasts or active detections match this filter. New records
-              will appear here as telemetry is processed.
+              There are no predictions in this section yet. New records will
+              appear here as telemetry is processed.
             </p>
           </div>
         )}
@@ -518,7 +511,13 @@ function Predictions() {
                             <div className="prediction-metric">
                               <span>Device</span>
 
-                              <strong>#{prediction.deviceId}</strong>
+                              <strong className="prediction-device-value">
+                                <span>#{prediction.deviceId}</span>
+                                <span className="prediction-device-name">
+                                  {prediction.device?.name ||
+                                    `Device #${prediction.deviceId}`}
+                                </span>
+                              </strong>
                             </div>
 
                             <div className="prediction-metric">

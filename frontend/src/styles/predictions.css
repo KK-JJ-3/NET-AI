@@ -22,7 +22,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 32px;
-  margin-bottom: 28px;
+  margin-bottom: 22px;
 }
 
 .predictions-header > div {
@@ -511,7 +511,7 @@
 .prediction-detail-page {
   width: min(100%, 1240px);
   margin: 0 auto;
-  padding: 34px 46px 70px;
+  padding: 26px 38px 48px;
 }
 
 /* ---------------------------------------------------------
@@ -563,9 +563,16 @@
   justify-content: space-between;
   gap: 28px;
 
-  padding-bottom: 30px;
+  padding-bottom: 24px;
 
   border-bottom: 2px solid #303030;
+}
+
+.prediction-detail-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 16px;
 }
 
 .prediction-detail-header h1 {
@@ -584,6 +591,40 @@
   color: #929292;
   font-size: 14px;
   line-height: 1.7;
+}
+
+.prediction-detection-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 5px 9px;
+  border: 1px solid #46513b;
+  background: rgb(183 255 0 / 7%);
+  color: #c9ff69;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.prediction-detection-type.active {
+  border-color: rgb(255 82 92 / 55%);
+  background: rgb(255 82 92 / 8%);
+  color: #ff777e;
+}
+
+.prediction-detail-device-card strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: clamp(16px, 1.4vw, 21px);
+}
+
+.prediction-detail-device-card small {
+  color: #858585;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.03em;
 }
 
 .prediction-detail-status {
@@ -617,12 +658,12 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
 
-  margin: 28px 0 46px;
+  margin: 22px 0 32px;
 }
 
 .prediction-detail-card {
-  min-height: 112px;
-  padding: 19px;
+  min-height: 100px;
+  padding: 16px 18px;
 
   display: flex;
   flex-direction: column;
@@ -663,11 +704,12 @@
    --------------------------------------------------------- */
 
 .prediction-detail-section {
-  margin-top: 44px;
+  margin-top: 32px;
 }
 
 .prediction-detail-section-heading {
-  margin-bottom: 20px;
+  margin-bottom: 14px;
+  padding-left: 16px;
 }
 
 .prediction-detail-section-heading h2 {
@@ -692,8 +734,8 @@
 }
 
 .prediction-detail-information > div {
-  min-height: 92px;
-  padding: 18px 20px;
+  min-height: 78px;
+  padding: 15px 18px;
 
   display: flex;
   flex-direction: column;
@@ -734,8 +776,8 @@
    --------------------------------------------------------- */
 
 .prediction-detail-placeholder {
-  min-height: 150px;
-  padding: 26px;
+  min-height: 120px;
+  padding: 20px;
 
   display: flex;
   align-items: center;
@@ -1352,4 +1394,40 @@
   background: var(--lime, #b7ff00);
   font-size: 12px;
   font-weight: 900;
+}
+
+/* Prediction detail refinements: compact rhythm and clear detection type. */
+@media (max-width: 900px) {
+  .prediction-detail-page {
+    padding: 22px 24px 40px;
+  }
+}
+
+@media (max-width: 600px) {
+  .prediction-detail-page {
+    padding: 18px 16px 32px;
+  }
+
+  .prediction-detail-header {
+    gap: 14px;
+    padding-bottom: 20px;
+  }
+
+  .prediction-detail-title-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .prediction-detail-summary {
+    margin: 18px 0 26px;
+  }
+
+  .prediction-detail-section {
+    margin-top: 26px;
+  }
+
+  .prediction-detail-placeholder {
+    padding: 14px;
+  }
 }

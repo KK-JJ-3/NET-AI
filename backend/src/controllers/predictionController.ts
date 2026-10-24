@@ -45,6 +45,17 @@ export async function getPredictionById(
       where: {
         id: predictionId,
       },
+      include: {
+        device: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            status: true,
+            ipAddress: true,
+          },
+        },
+      },
     });
 
     if (!prediction) {
