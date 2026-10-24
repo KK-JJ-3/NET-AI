@@ -2331,3 +2331,720 @@
     transition: none;
   }
 }
+
+/* =========================================================
+   DEVICES UI POLISH — cohesive controls and detail alignment
+   ========================================================= */
+.devices-page {
+  --device-surface: #151515;
+  --device-control: #101110;
+  --device-rule: #353735;
+}
+
+.device-controls {
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px;
+  margin-bottom: 14px;
+  background: rgba(20, 21, 20, 0.92);
+  border: 1px solid var(--device-rule);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45);
+}
+
+.device-search,
+.sort-control,
+.device-controls .refresh-button {
+  min-height: 48px;
+  background: var(--device-control);
+  border: 1px solid #414341;
+  box-shadow: none;
+}
+
+.device-search {
+  padding-inline: 14px;
+}
+
+.device-search:focus-within,
+.sort-control:focus-within {
+  border-color: var(--lime);
+  box-shadow: inset 0 0 0 1px rgba(190, 255, 0, 0.16);
+}
+
+.sort-control {
+  min-width: 205px;
+  padding-inline: 13px;
+  color: var(--muted);
+}
+
+.sort-control select {
+  flex: 1;
+  min-width: 0;
+}
+
+.device-controls .refresh-button {
+  min-width: 118px;
+  padding-inline: 14px;
+}
+
+.device-controls .refresh-button:hover:not(:disabled) {
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+
+.nf-chips {
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 2px 0 4px;
+}
+
+.status-filter {
+  min-height: 40px;
+  padding-inline: 13px;
+  background: #151615;
+  border: 1px solid #414341;
+}
+
+.status-filter.active {
+  border-color: var(--lime);
+  box-shadow: none;
+}
+
+.status-filter.empty:not(.active) {
+  border-style: solid;
+  opacity: 0.72;
+}
+
+.device-results-meta {
+  gap: 12px;
+  color: var(--muted);
+}
+
+.device-results-meta span + span {
+  padding-left: 12px;
+  border-left: 1px solid var(--device-rule);
+}
+
+/* A single alignment axis for the detail title and its status. */
+.detail-scroll-area {
+  padding-top: 28px;
+}
+
+.detail-back-button {
+  margin-bottom: 16px;
+}
+
+.breadcrumb-nav {
+  margin-bottom: 18px;
+}
+
+.device-detail-hero {
+  padding-bottom: 24px;
+}
+
+.detail-device-type {
+  min-height: 36px;
+}
+
+.detail-title-row {
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.device-detail-hero h1 {
+  max-width: min(100%, 980px);
+  font-size: clamp(34px, 3.4vw, 48px);
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+
+.detail-title-row .status-badge {
+  flex: 0 0 auto;
+  margin: 0;
+  align-self: center;
+}
+
+.detail-grid {
+  gap: 16px;
+}
+
+.detail-panel,
+.telemetry-panel {
+  border-color: #393b39;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.58);
+}
+
+.detail-panel {
+  padding: 22px;
+}
+
+.detail-panel .panel-heading {
+  min-height: 44px;
+  padding-bottom: 14px;
+}
+
+.detail-panel .panel-heading > div:first-child {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.detail-panel .panel-heading > div:last-child {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-panel .panel-heading > div:last-child .primary-action,
+.detail-panel .panel-heading > div:last-child .secondary-action {
+  min-height: 42px;
+}
+
+.detail-panel .panel-heading > div:last-child .primary-action {
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.interface-row {
+  gap: 12px;
+}
+
+.telemetry-chart-panel,
+.telemetry-resource-chart {
+  min-width: 0;
+}
+
+.telemetry-chart {
+  min-width: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .device-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, auto);
+  }
+
+  .device-search {
+    grid-column: 1 / -1;
+  }
+
+  .device-controls .refresh-button {
+    min-width: 0;
+  }
+
+  .detail-panel .panel-heading {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .device-controls {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 8px;
+  }
+
+  .device-search,
+  .sort-control,
+  .device-controls .refresh-button {
+    width: 100%;
+    min-width: 0;
+    grid-column: auto;
+  }
+
+  .device-results-meta span + span {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .detail-scroll-area {
+    padding-top: 18px;
+  }
+
+  .device-detail-hero h1 {
+    font-size: clamp(30px, 9vw, 40px);
+    line-height: 1.1;
+  }
+
+  .detail-title-row {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .detail-panel .panel-heading {
+    gap: 12px;
+  }
+
+  .detail-panel .panel-heading > div:last-child {
+    width: 100%;
+  }
+
+  .detail-panel .panel-heading > div:last-child .primary-action {
+    flex: 1;
+  }
+}
+
+/* =========================================================
+   DEVICES UI POLISH — second pass from screenshot review
+   Keep the total count compact and make the toolbar read as
+   one composed control, not three unrelated boxed widgets.
+   ========================================================= */
+.devices-page .devices-hero {
+  align-items: center;
+  gap: 24px;
+}
+
+.devices-page .devices-hero-total {
+  flex: 0 0 auto;
+}
+
+.devices-page .total-card {
+  box-sizing: border-box;
+  width: 142px;
+  min-width: 142px;
+  min-height: 92px;
+  height: 92px;
+  flex: 0 0 142px;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 12px 15px;
+  border: 1px solid var(--lime);
+  border-radius: 5px;
+  box-shadow: none;
+}
+
+.devices-page .total-card-label,
+.devices-page .total-card-caption {
+  display: block;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.devices-page .total-card strong {
+  display: block;
+  margin: 1px 0 0;
+  font-size: 36px;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+
+.devices-page .device-controls {
+  grid-template-columns: minmax(0, 1fr) 224px 132px;
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+  background: #101110;
+  border: 1px solid #3a3d39;
+  border-radius: 4px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.36);
+}
+
+.devices-page .device-search,
+.devices-page .sort-control,
+.devices-page .device-controls .refresh-button {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.devices-page .device-search {
+  padding-inline: 17px;
+  background: transparent;
+}
+
+.devices-page .device-search:focus-within {
+  border: 0;
+  box-shadow: inset 0 0 0 1px var(--lime);
+}
+
+.devices-page .sort-control {
+  gap: 9px;
+  padding-inline: 14px;
+  background: rgba(190, 255, 0, 0.075);
+  border-left: 1px solid #3a3d39;
+  border-right: 1px solid #3a3d39;
+  color: #c4c9c1;
+}
+
+.devices-page .sort-control > svg {
+  flex: 0 0 auto;
+  color: var(--lime);
+}
+
+.devices-page .sort-control > span {
+  color: #d5d8d2;
+}
+
+.devices-page .sort-control select {
+  width: 100%;
+  min-width: 0;
+  color: var(--text);
+}
+
+.devices-page .sort-control:focus-within {
+  box-shadow: inset 0 0 0 1px var(--lime);
+}
+
+.devices-page .device-controls .refresh-button {
+  justify-content: center;
+  padding-inline: 12px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.devices-page .device-controls .refresh-button:hover:not(:disabled) {
+  background: rgba(190, 255, 0, 0.08);
+  transform: none;
+}
+
+/* Device identity gets a clear three-step rhythm: type, name/status, last seen. */
+.detail-scroll-area {
+  padding-top: 26px;
+}
+
+.detail-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  margin: 0 0 18px;
+}
+
+.breadcrumb-nav {
+  margin: 0 0 22px;
+}
+
+.device-detail-hero {
+  padding: 0 0 28px;
+}
+
+.detail-title-block {
+  width: 100%;
+}
+
+.detail-device-type {
+  min-height: 36px;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+.detail-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 18px;
+  row-gap: 10px;
+  margin: 0;
+}
+
+.device-detail-hero h1 {
+  min-width: 0;
+  max-width: min(100%, 900px);
+  font-size: clamp(34px, 3.2vw, 46px);
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+
+.detail-title-row .status-badge {
+  flex: 0 0 auto;
+  align-self: center;
+  margin: 0;
+}
+
+.detail-last-reported {
+  margin: 12px 0 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 1100px) {
+  .devices-page .device-controls {
+    grid-template-columns: minmax(0, 1fr) 205px 118px;
+  }
+}
+
+@media (max-width: 900px) {
+  .devices-page .devices-hero {
+    align-items: flex-start;
+  }
+
+  .devices-page .device-controls {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .devices-page .device-search {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid #3a3d39;
+  }
+
+  .devices-page .sort-control {
+    border-left: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .devices-page .devices-hero {
+    gap: 18px;
+  }
+
+  .devices-page .total-card {
+    width: 108px;
+    min-width: 108px;
+    height: 82px;
+    min-height: 82px;
+    flex-basis: 108px;
+    padding: 10px;
+  }
+
+  .devices-page .total-card strong {
+    font-size: 30px;
+  }
+
+  .devices-page .device-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .devices-page .device-search,
+  .devices-page .sort-control,
+  .devices-page .device-controls .refresh-button {
+    width: 100%;
+    grid-column: auto;
+  }
+
+  .devices-page .sort-control {
+    border: 0;
+    border-top: 1px solid #3a3d39;
+    border-bottom: 1px solid #3a3d39;
+  }
+
+  .detail-scroll-area {
+    padding-top: 18px;
+  }
+
+  .breadcrumb-nav {
+    margin-bottom: 18px;
+  }
+
+  .device-detail-hero {
+    padding-bottom: 22px;
+  }
+
+  .detail-device-type {
+    margin-bottom: 12px;
+  }
+
+  .detail-title-row {
+    column-gap: 12px;
+    row-gap: 8px;
+  }
+
+  .device-detail-hero h1 {
+    font-size: clamp(29px, 8vw, 38px);
+    line-height: 1.1;
+  }
+
+  .detail-last-reported {
+    margin-top: 10px;
+  }
+}
+
+/* =========================================================
+   DEVICES UI POLISH — compact count, visible refresh, balanced identity
+   ========================================================= */
+.devices-page .total-card {
+  width: 124px;
+  min-width: 124px;
+  height: 78px;
+  min-height: 78px;
+  flex: 0 0 124px;
+  padding: 9px 12px;
+  gap: 2px;
+  border-radius: 4px;
+}
+
+.devices-page .total-card-label,
+.devices-page .total-card-caption {
+  font-size: 11px;
+  line-height: 1.05;
+}
+
+.devices-page .total-card strong {
+  font-size: 31px;
+  line-height: 0.95;
+}
+
+/* Keep Refresh visible on hover: dark surface, lime edge and readable label. */
+.devices-page .device-controls .refresh-button:hover:not(:disabled) {
+  color: var(--lime);
+  background: #171a12;
+  border: 0;
+  box-shadow: inset 0 0 0 1px rgba(190, 255, 0, 0.48);
+  transform: none;
+}
+
+.devices-page .device-controls .refresh-button:hover:not(:disabled) svg {
+  color: var(--lime);
+  opacity: 1;
+}
+
+/* Spread device identity across the available width instead of clustering
+   the status directly beside the name. */
+.detail-title-row {
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.device-detail-hero h1 {
+  flex: 0 1 auto;
+  max-width: min(100%, 900px);
+}
+
+.detail-title-row .status-badge {
+  margin-left: auto;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(43, 226, 161, 0.4);
+  border-radius: 4px;
+  background: rgba(43, 226, 161, 0.08);
+  color: #38e6a5;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .detail-title-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .detail-title-row .status-badge {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .devices-page .total-card {
+    width: 108px;
+    min-width: 108px;
+    height: 74px;
+    min-height: 74px;
+    flex-basis: 108px;
+    padding: 8px 10px;
+  }
+
+  .devices-page .total-card strong {
+    font-size: 29px;
+  }
+}
+
+/* =========================================================
+   DEVICE DETAIL — compact identity stack
+   Remove redundant breadcrumb and tighten the header rhythm.
+   ========================================================= */
+.detail-scroll-area {
+  padding-top: 22px;
+}
+
+.detail-back-button {
+  margin-bottom: 22px;
+}
+
+.device-detail-hero {
+  padding-bottom: 22px;
+}
+
+.detail-device-type {
+  min-height: 30px;
+  gap: 9px;
+  margin-bottom: 9px;
+  font-size: 12px;
+}
+
+.detail-device-type .device-icon {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+}
+
+.detail-device-type .device-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.device-detail-hero h1 {
+  font-size: clamp(32px, 2.8vw, 42px);
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+}
+
+.detail-last-reported {
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  .detail-scroll-area {
+    padding-top: 16px;
+  }
+
+  .detail-back-button {
+    margin-bottom: 18px;
+  }
+
+  .device-detail-hero {
+    padding-bottom: 18px;
+  }
+
+  .device-detail-hero h1 {
+    font-size: clamp(28px, 7.5vw, 36px);
+  }
+}
+
+/* DEVICE DETAIL — give the device identity more presence */
+.device-detail-hero .detail-device-type {
+  min-height: 44px;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.device-detail-hero .detail-device-type .device-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+}
+
+.device-detail-hero .detail-device-type .device-icon svg {
+  width: 25px;
+  height: 25px;
+}
+
+@media (max-width: 700px) {
+  .device-detail-hero .detail-device-type {
+    min-height: 40px;
+    font-size: 14px;
+  }
+
+  .device-detail-hero .detail-device-type .device-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+  }
+
+  .device-detail-hero .detail-device-type .device-icon svg {
+    width: 23px;
+    height: 23px;
+  }
+}

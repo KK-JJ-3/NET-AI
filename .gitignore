@@ -165,9 +165,9 @@ artifacts/
 # Keep feature importance metadata in Git
 !ai-service/models/feature_importance.json
 
-# Trained model binaries remain ignored
+# Trained model binaries remain ignored except the XGBoost classifier
 ai-service/models/*.joblib
-
+!ai-service/models/xgboost_classifier.joblib
 
 # ------------------------------------------------------------
 # Temporary / Generated Data

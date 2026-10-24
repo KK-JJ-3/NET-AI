@@ -20,7 +20,6 @@ import {
 } from "../api/client";
 
 import {
-  Breadcrumb,
   CopyValue,
   DeviceTypeIcon,
   StatusBadge,
@@ -421,23 +420,6 @@ function DeviceDetails({ deviceId, onBack }) {
         <span>Back to devices</span>
       </button>
 
-      <Breadcrumb
-        items={[
-          {
-            label: "Devices",
-            action: "devices",
-          },
-          {
-            label: device.name,
-          },
-        ]}
-        onNavigate={(page) => {
-          if (page === "devices") {
-            onBack();
-          }
-        }}
-      />
-
       {/* DEVICE HEADER */}
       <section className="device-detail-hero">
         <div className="detail-title-block">
@@ -493,7 +475,7 @@ function DeviceDetails({ deviceId, onBack }) {
         {/* INTERFACES */}
         <div className="detail-panel">
           <div className="panel-heading">
-            <div>
+            <div className="interface-panel-title">
               <span>Interfaces</span>
 
               <strong>
@@ -502,7 +484,7 @@ function DeviceDetails({ deviceId, onBack }) {
               </strong>
             </div>
 
-            <div>
+            <div className="interface-panel-actions">
               <button
                 type="button"
                 className="primary-action"
@@ -735,12 +717,7 @@ function DeviceDetails({ deviceId, onBack }) {
                         name="Latency"
                         stroke="#3b82f6"
                         strokeWidth={3}
-                        dot={{
-                          r: 3,
-                          fill: "#3b82f6",
-                          stroke: "#111",
-                          strokeWidth: 2,
-                        }}
+                        dot={false}
                         activeDot={{
                           r: 5,
                           fill: "#3b82f6",
@@ -754,12 +731,7 @@ function DeviceDetails({ deviceId, onBack }) {
                         name="Packet Loss"
                         stroke="#ef4444"
                         strokeWidth={3}
-                        dot={{
-                          r: 3,
-                          fill: "#ef4444",
-                          stroke: "#111",
-                          strokeWidth: 2,
-                        }}
+                        dot={false}
                         activeDot={{
                           r: 5,
                           fill: "#ef4444",
@@ -773,12 +745,7 @@ function DeviceDetails({ deviceId, onBack }) {
                         name="Jitter"
                         stroke="#f59e0b"
                         strokeWidth={3}
-                        dot={{
-                          r: 3,
-                          fill: "#f59e0b",
-                          stroke: "#111",
-                          strokeWidth: 2,
-                        }}
+                        dot={false}
                         activeDot={{
                           r: 5,
                           fill: "#f59e0b",
@@ -889,12 +856,7 @@ function DeviceDetails({ deviceId, onBack }) {
                         name="Utilization"
                         stroke="#a855f7"
                         strokeWidth={3}
-                        dot={{
-                          r: 3,
-                          fill: "#a855f7",
-                          stroke: "#111",
-                          strokeWidth: 2,
-                        }}
+                        dot={false}
                       />
 
                       <Line
@@ -903,12 +865,7 @@ function DeviceDetails({ deviceId, onBack }) {
                         name="CPU"
                         stroke="#14b8a6"
                         strokeWidth={3}
-                        dot={{
-                          r: 3,
-                          fill: "#14b8a6",
-                          stroke: "#111",
-                          strokeWidth: 2,
-                        }}
+                        dot={false}
                       />
 
                       <Line
@@ -917,12 +874,7 @@ function DeviceDetails({ deviceId, onBack }) {
                         name="Memory"
                         stroke="#ec4899"
                         strokeWidth={3}
-                        dot={{
-                          r: 3,
-                          fill: "#ec4899",
-                          stroke: "#111",
-                          strokeWidth: 2,
-                        }}
+                        dot={false}
                       />
                     </LineChart>
                   </ResponsiveContainer>
