@@ -205,7 +205,7 @@ Example device-failure run:
 python -m simulator.run_simulator --scenario device_failure --device-id 1 --time-mode accelerated --duration 60
 ```
 
-The simulator supports `normal`, `congestion` and `device_failure`. It defaults to one-minute readings and appends a healthy telemetry tail so forecast outcomes have time to resolve in simulated time. The default tail is 10 minutes; set `--tail-minutes 0` to disable it.
+The simulator supports `normal`, `congestion` and `device_failure`. It defaults to one-minute readings and appends a healthy telemetry tail so forecast outcomes have time to resolve in simulated time. The default tail is 10 minutes; set `--tail-minutes 0` to disable it. Before each run, it reads the device's latest stored telemetry timestamp and starts at the later of the current UTC time or one configured interval after that timestamp. This keeps repeated accelerated runs on the same device in chronological order, so the backend's 15-reading AI window does not mix timestamps from overlapping runs. The timestamp lookup requires the authenticated backend to be running.
 
 ### Simulator help
 
@@ -251,7 +251,7 @@ The backend can save telemetry even if the AI service is temporarily unavailable
 - **AI service fails at startup:** confirm the virtual environment dependencies are installed and the model artifacts exist in `ai-service/models/`.
 - **`/predict` returns HTTP 422:** inspect the request window. It must contain the required telemetry values and readings spaced approximately one minute apart.
 - **Simulator login fails:** set `NETFAULT_USERNAME` and `NETFAULT_PASSWORD` in the same terminal where you run the simulator, and use valid application credentials.
-- **No charts or predictions appear:** make sure the simulator is targeting a real device ID, the AI service is healthy, and enough telemetry has been submitted. Check the backend and AI-service terminal logs.
+- **No charts or predictions appear:** make sure the simulator is targeting a real device ID, the AI service is healthy, and enough telemetry has been submitted. Check the backend and AI-service terminal logs. The simulator now queries the device's latest timestamp before a run; if that lookup fails, check backend availability and authentication.
 - **Frontend cannot reach the API:** confirm the backend is running on port 5000 and that the frontend API base URL matches it.
 
 ## Project status and limitations

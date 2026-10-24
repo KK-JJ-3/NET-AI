@@ -76,6 +76,43 @@ export async function getDeviceById(
   }
 }
 
+export async function getLatestDeviceTelemetry(
+  req: Request,
+  res: Response,
+): Promise<Response> {
+  const deviceId = Number(req.params.id);
+
+  if (!Number.isInteger(deviceId) || deviceId <= 0) {
+    return sendError(res, "Invalid device ID", 400);
+  }
+
+  try {
+    const device = await prisma.device.findUnique({
+      where: { id: deviceId },
+      select: { id: true },
+    });
+
+    if (!device) {
+      return sendError(res, "Device not found", 404);
+    }
+
+    const latestTelemetry = await prisma.telemetry.findFirst({
+      where: { deviceId },
+      orderBy: [{ recordedAt: "desc" }, { id: "desc" }],
+      select: { recordedAt: true },
+    });
+
+    return sendSuccess(res, {
+      deviceId,
+      latestRecordedAt: latestTelemetry?.recordedAt ?? null,
+    });
+  } catch (error) {
+    console.error("Failed to fetch latest device telemetry:", error);
+
+    return sendError(res, "Failed to fetch latest device telemetry", 500);
+  }
+}
+
 export async function getDeviceTelemetry(
   req: Request,
   res: Response,

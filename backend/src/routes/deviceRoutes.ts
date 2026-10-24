@@ -5,6 +5,7 @@ import {
   getDevices,
   getDeviceById,
   getDeviceTelemetry,
+  getLatestDeviceTelemetry,
   updateDevice,
   deleteDevice,
 } from "../controllers/deviceController.js";
@@ -21,6 +22,7 @@ router.post("/", createDevice);
 router.patch("/:id", updateDevice);
 router.get("/:id", getDeviceById);
 router.delete("/:id", deleteDevice);
+router.get("/:id/telemetry/latest", getLatestDeviceTelemetry);
 router.get(
   "/:id/telemetry",
   validate(telemetryHistorySchema),

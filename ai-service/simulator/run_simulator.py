@@ -6,7 +6,7 @@ import os
 import sys
 import time
 from dataclasses import replace
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import requests
@@ -106,6 +106,91 @@ def login(session: requests.Session, base_url: str) -> str:
 
     session.headers.update({"Authorization": f"Bearer {token}"})
     return username
+
+
+def parse_recorded_at(value: Any) -> datetime:
+    if not isinstance(value, str):
+        raise RuntimeError(f"Telemetry timestamp is not a string: {value!r}")
+
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise RuntimeError(f"Invalid telemetry timestamp: {value!r}") from error
+
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def get_latest_recorded_at(
+    session: requests.Session, base_url: str, device_id: int
+) -> datetime | None:
+    """Read the latest persisted timestamp, including future-dated accelerated data."""
+    response = session.get(
+        f"{base_url.rstrip('/')}/devices/{device_id}/telemetry/latest",
+        timeout=REQUEST_TIMEOUT_SECONDS,
+    )
+    payload = response_payload(response)
+    data = payload.get("data", payload)
+
+    if not isinstance(data, dict):
+        raise RuntimeError(f"Unexpected latest-telemetry response: {payload}")
+
+    value = data.get("latestRecordedAt")
+    return None if value is None else parse_recorded_at(value)
+
+
+def choose_simulation_start(
+    now: datetime, latest_recorded_at: datetime | None, interval_seconds: int
+) -> datetime:
+    """Keep a new run after stored telemetry while never starting before now."""
+    if interval_seconds <= 0:
+        raise ValueError("interval_seconds must be positive")
+
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    now = now.astimezone(timezone.utc)
+
+    if latest_recorded_at is None:
+        return now
+
+    latest = latest_recorded_at
+    if latest.tzinfo is None:
+        latest = latest.replace(tzinfo=timezone.utc)
+    latest = latest.astimezone(timezone.utc)
+
+    return max(now, latest + timedelta(seconds=interval_seconds))
+
+
+def choose_live_recorded_at(
+    now: datetime,
+    simulation_start: datetime,
+    sample_index: int,
+    interval_seconds: int,
+) -> datetime:
+    """Keep live timestamps on the device timeline without dating samples in the past.
+
+    Normally ``now`` wins and timestamps follow wall-clock send time. If prior
+    accelerated runs left future-dated telemetry, the timeline floor wins until
+    wall-clock time catches up.
+    """
+    if sample_index < 0:
+        raise ValueError("sample_index cannot be negative")
+    if interval_seconds <= 0:
+        raise ValueError("interval_seconds must be positive")
+
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    now = now.astimezone(timezone.utc)
+
+    if simulation_start.tzinfo is None:
+        simulation_start = simulation_start.replace(tzinfo=timezone.utc)
+    simulation_start = simulation_start.astimezone(timezone.utc)
+
+    timestamp_floor = simulation_start + timedelta(
+        seconds=sample_index * interval_seconds
+    )
+    return max(now, timestamp_floor)
 
 
 def is_fault_onset(sample: TelemetrySample) -> bool:
@@ -249,21 +334,9 @@ def run(args: argparse.Namespace) -> None:
         interval_seconds=args.interval,
     )
 
+    scenario_samples: list[TelemetrySample] = []
+    samples: list[TelemetrySample] = []
     simulation_start = datetime.now(timezone.utc)
-    scenario_samples = generate_scenario(config, simulation_start)
-    samples = append_healthy_tail(
-        scenario_samples, args.tail_minutes, args.interval
-    )
-
-    print(f"Scenario: {scenario.value}")
-    print(f"Device ID: {args.device_id}")
-    print(f"Scenario samples: {len(scenario_samples)}")
-    print(f"Healthy tail samples: {len(samples) - len(scenario_samples)}")
-    print(f"Total samples: {len(samples)}")
-    print(f"Time mode: {args.time_mode}")
-    print(f"Sample interval: {args.interval} simulated seconds")
-    print(f"Send pace: {pace:g} real seconds")
-    print(f"API: {args.base_url}\n")
 
     fault_id: int | None = None
     fault_resolved = False
@@ -272,7 +345,32 @@ def run(args: argparse.Namespace) -> None:
 
     with requests.Session() as session:
         username = login(session, args.base_url)
-        print(f"Authenticated as {username}.\n")
+        print(f"Authenticated as {username}.")
+
+        latest_recorded_at = get_latest_recorded_at(
+            session, args.base_url, args.device_id
+        )
+        simulation_start = choose_simulation_start(
+            datetime.now(timezone.utc), latest_recorded_at, args.interval
+        )
+        if latest_recorded_at is not None:
+            print(f"Latest stored telemetry: {latest_recorded_at.isoformat()}")
+        print(f"Simulation starts at: {simulation_start.isoformat()}\n")
+
+        scenario_samples = generate_scenario(config, simulation_start)
+        samples = append_healthy_tail(
+            scenario_samples, args.tail_minutes, args.interval
+        )
+
+        print(f"Scenario: {scenario.value}")
+        print(f"Device ID: {args.device_id}")
+        print(f"Scenario samples: {len(scenario_samples)}")
+        print(f"Healthy tail samples: {len(samples) - len(scenario_samples)}")
+        print(f"Total samples: {len(samples)}")
+        print(f"Time mode: {args.time_mode}")
+        print(f"Sample interval: {args.interval} simulated seconds")
+        print(f"Send pace: {pace:g} real seconds")
+        print(f"API: {args.base_url}\n")
 
         # Pacing is measured from the start of the first sample, avoiding
         # accumulated sleep drift during long simulations.
@@ -287,11 +385,17 @@ def run(args: argparse.Namespace) -> None:
                         time.sleep(remaining)
 
                 if args.time_mode == "live":
-                    # The timestamp represents when this sample is actually
-                    # sent, rather than a precomputed future timestamp.
+                    # Normally this follows wall-clock send time. If an earlier
+                    # accelerated run left future-dated readings, preserve the
+                    # device timeline instead of inserting older timestamps.
                     sample = replace(
                         original_sample,
-                        recorded_at=datetime.now(timezone.utc),
+                        recorded_at=choose_live_recorded_at(
+                            datetime.now(timezone.utc),
+                            simulation_start,
+                            index,
+                            args.interval,
+                        ),
                     )
                 else:
                     # Keep the generated simulation timeline, even when
