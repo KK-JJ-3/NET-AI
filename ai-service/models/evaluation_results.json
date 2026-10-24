@@ -5,38 +5,38 @@
   "future_horizon_minutes": 20,
   "window_size": 15,
   "test_samples": 6880,
-  "accuracy": 0.942296511627907,
-  "accuracy_percent": 94.23,
+  "accuracy": 0.9568313953488372,
+  "accuracy_percent": 95.68,
   "classification_report": {
     "normal": {
-      "precision": 0.9982463831652784,
-      "recall": 0.9286296900489397,
-      "f1-score": 0.9621804352419184,
+      "precision": 0.9842800251519598,
+      "recall": 0.9575856443719413,
+      "f1-score": 0.9707493540051679,
       "support": 4904.0
     },
     "congestion": {
-      "precision": 0.9427645788336934,
-      "recall": 0.9743303571428571,
-      "f1-score": 0.9582875960482986,
+      "precision": 0.9766146993318485,
+      "recall": 0.9787946428571429,
+      "f1-score": 0.9777034559643255,
       "support": 896.0
     },
     "device_failure": {
-      "precision": 0.7586206896551724,
-      "recall": 0.9777777777777777,
-      "f1-score": 0.8543689320388349,
+      "precision": 0.8340214698596201,
+      "recall": 0.9351851851851852,
+      "f1-score": 0.8817110432125709,
       "support": 1080.0
     },
-    "accuracy": 0.942296511627907,
+    "accuracy": 0.9568313953488372,
     "macro avg": {
-      "precision": 0.899877217218048,
-      "recall": 0.9602459416565249,
-      "f1-score": 0.9249456544430174,
+      "precision": 0.9316387314478094,
+      "recall": 0.9571884908047564,
+      "f1-score": 0.9433879510606881,
       "support": 6880.0
     },
     "weighted avg": {
-      "precision": 0.9534051846664389,
-      "recall": 0.942296511627907,
-      "f1-score": 0.944749562076684,
+      "precision": 0.9596946513655431,
+      "recall": 0.9568313953488372,
+      "f1-score": 0.9576780603568249,
       "support": 6880.0
     }
   },
@@ -48,29 +48,29 @@
     ],
     "matrix": [
       [
-        4554,
-        37,
-        313
+        4696,
+        14,
+        194
       ],
       [
-        0,
-        873,
-        23
+        12,
+        877,
+        7
       ],
       [
-        8,
-        16,
-        1056
+        63,
+        7,
+        1010
       ]
     ]
   },
   "normal_samples": 4904,
-  "normal_false_positives": 350,
-  "normal_false_positive_rate": 0.07137030995106036,
-  "normal_false_positive_rate_percent": 7.14,
+  "normal_false_positives": 208,
+  "normal_false_positive_rate": 0.04241435562805873,
+  "normal_false_positive_rate_percent": 4.24,
   "future_fault_samples": 1976,
-  "missed_future_faults": 8,
-  "future_fault_miss_rate": 0.004048582995951417,
+  "missed_future_faults": 75,
+  "future_fault_miss_rate": 0.03795546558704453,
   "training_samples": 26503,
   "base_feature_count": 35,
   "classifier_feature_count": 36,
@@ -79,8 +79,12 @@
   "total_generated_episodes": 900,
   "episode_duration_minutes": 60,
   "anomaly_contamination": 0.05,
-  "classifier_estimators": 200,
-  "classifier_max_depth": 10,
+  "classifier_estimators": 300,
+  "classifier_max_depth": 6,
+  "classifier_learning_rate": 0.1,
+  "classifier_subsample": 0.8,
+  "classifier_colsample_bytree": 0.8,
+  "classifier_type": "XGBClassifier",
   "training_target_distribution": {
     "normal": 17435,
     "device_failure": 4920,

@@ -28,8 +28,11 @@ def train_and_evaluate() -> FaultClassifier:
     test_labels = y_test.to_numpy()
 
     classifier = FaultClassifier(
-        n_estimators=200,
-        max_depth=10,
+        n_estimators=300,
+        max_depth=6,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
         random_state=42,
     )
 
@@ -42,7 +45,7 @@ def train_and_evaluate() -> FaultClassifier:
         test_array
     )
 
-    print("=== Random Forest Evaluation ===")
+    print("=== XGBoost Evaluation ===")
     print()
     print(
         classification_report(
@@ -130,7 +133,7 @@ def train_and_evaluate() -> FaultClassifier:
     feature_importance = sorted(
         zip(
             x_train.columns,
-            classifier.model.feature_importances_,
+            classifier.feature_importances(),
         ),
         key=lambda item: item[1],
         reverse=True,

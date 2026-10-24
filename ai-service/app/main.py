@@ -21,7 +21,7 @@ ANOMALY_MODEL_PATH = (
 )
 
 CLASSIFIER_MODEL_PATH = (
-    MODEL_DIR / "random_forest.joblib"
+    MODEL_DIR / "xgboost_classifier.joblib"
 )
 
 FEATURE_IMPORTANCE_PATH = (

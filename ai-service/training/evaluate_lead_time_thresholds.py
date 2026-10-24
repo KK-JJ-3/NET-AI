@@ -26,7 +26,7 @@ FAULT_LABELS = ("congestion", "device_failure")
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 MODEL_DIR = PROJECT_DIR / "models"
 ANOMALY_MODEL_PATH = MODEL_DIR / "isolation_forest.joblib"
-CLASSIFIER_MODEL_PATH = MODEL_DIR / "random_forest.joblib"
+CLASSIFIER_MODEL_PATH = MODEL_DIR / "xgboost_classifier.joblib"
 OUTPUT_PATH = MODEL_DIR / "lead_time_threshold_comparison.json"
 
 EPISODES_PER_CLASS = 5

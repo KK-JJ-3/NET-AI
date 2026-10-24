@@ -28,7 +28,7 @@ PROJECT_DIR = Path(__file__).resolve().parent.parent
 MODEL_DIR = PROJECT_DIR / "models"
 
 ANOMALY_MODEL_PATH = MODEL_DIR / "isolation_forest.joblib"
-CLASSIFIER_MODEL_PATH = MODEL_DIR / "random_forest.joblib"
+CLASSIFIER_MODEL_PATH = MODEL_DIR / "xgboost_classifier.joblib"
 FEATURE_IMPORTANCE_PATH = MODEL_DIR / "feature_importance.json"
 NORMAL_BASELINE_PATH = MODEL_DIR / "normal_baseline.json"
 EVALUATION_PATH = MODEL_DIR / "evaluation_results.json"
@@ -40,8 +40,11 @@ EPISODE_DURATION_MINUTES = 60
 EPISODES_PER_CLASS = 300
 
 ANOMALY_CONTAMINATION = 0.05
-CLASSIFIER_ESTIMATORS = 200
-CLASSIFIER_MAX_DEPTH = 10
+CLASSIFIER_ESTIMATORS = 300
+CLASSIFIER_MAX_DEPTH = 6
+CLASSIFIER_LEARNING_RATE = 0.1
+CLASSIFIER_SUBSAMPLE = 0.8
+CLASSIFIER_COLSAMPLE_BYTREE = 0.8
 
 FAULT_CLASSES = [
     "normal",
@@ -158,7 +161,7 @@ def evaluate_model(
     # Match the live forecasting decision in app/predictor.py:
     # convert class probabilities through app.prediction.build_prediction,
     # including the combined fault-risk threshold, instead of using the
-    # Random Forest's raw argmax class prediction.
+    # The classifier's raw argmax class prediction.
     test_array = x_test.to_numpy(dtype=float)
     probability_rows = classifier.predict_proba(test_array)
     classes = [str(name) for name in classifier.classes()]
@@ -442,11 +445,14 @@ def train_models() -> None:
         )
 
     # Train the classifier on future fault labels.
-    print("Training Random Forest classifier...")
+    print("Training XGBoost classifier...")
 
     classifier = FaultClassifier(
         n_estimators=CLASSIFIER_ESTIMATORS,
         max_depth=CLASSIFIER_MAX_DEPTH,
+        learning_rate=CLASSIFIER_LEARNING_RATE,
+        subsample=CLASSIFIER_SUBSAMPLE,
+        colsample_bytree=CLASSIFIER_COLSAMPLE_BYTREE,
         random_state=RANDOM_SEED,
     )
 
@@ -479,6 +485,10 @@ def train_models() -> None:
     evaluation["anomaly_contamination"] = ANOMALY_CONTAMINATION
     evaluation["classifier_estimators"] = CLASSIFIER_ESTIMATORS
     evaluation["classifier_max_depth"] = CLASSIFIER_MAX_DEPTH
+    evaluation["classifier_learning_rate"] = CLASSIFIER_LEARNING_RATE
+    evaluation["classifier_subsample"] = CLASSIFIER_SUBSAMPLE
+    evaluation["classifier_colsample_bytree"] = CLASSIFIER_COLSAMPLE_BYTREE
+    evaluation["classifier_type"] = "XGBClassifier"
     evaluation["training_target_distribution"] = {
         str(key): int(value)
         for key, value in y_train.value_counts().items()
