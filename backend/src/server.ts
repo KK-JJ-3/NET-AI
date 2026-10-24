@@ -46,9 +46,25 @@ app.get("/api/health", async (_req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
 
+    let aiService = "unavailable";
+    const aiServiceUrl = (
+      process.env.AI_SERVICE_URL || "http://localhost:8000"
+    ).replace(/\/$/, "");
+    try {
+      const response = await fetch(`${aiServiceUrl}/health`, {
+        signal: AbortSignal.timeout(2000),
+      });
+      const health = await response.json();
+      aiService =
+        response.ok && health?.status === "ok" ? "connected" : "unavailable";
+    } catch {
+      // Keep API/database health independent from AI-service availability.
+    }
+
     return sendSuccess(res, {
       server: "ok",
       database: "connected",
+      aiService,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

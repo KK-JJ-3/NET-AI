@@ -5,45 +5,74 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 const SOCKET_URL = API_BASE_URL.replace(/\/api\/?$/, "");
 
+let socket;
+let revision = 0;
+let connectionStatus = "connecting";
+let refreshTimeout;
+const subscribers = new Set();
+
+function publish() {
+  subscribers.forEach((subscriber) =>
+    subscriber({ revision, connectionStatus }),
+  );
+}
+
+function ensureSocket() {
+  if (socket) return;
+  const token = localStorage.getItem("netfault_token");
+  if (!token) {
+    connectionStatus = "disconnected";
+    return;
+  }
+
+  connectionStatus = "connecting";
+  socket = io(SOCKET_URL, {
+    auth: { token },
+    reconnection: true,
+    timeout: 5000,
+  });
+  socket.on("connect", () => {
+    connectionStatus = "connected";
+    publish();
+  });
+  socket.on("disconnect", () => {
+    connectionStatus = "disconnected";
+    publish();
+  });
+  socket.on("connect_error", (error) => {
+    connectionStatus = "disconnected";
+    console.warn("Realtime connection unavailable:", error.message);
+    publish();
+  });
+  socket.on("monitoring:update", () => {
+    if (refreshTimeout) clearTimeout(refreshTimeout);
+    refreshTimeout = setTimeout(() => {
+      revision += 1;
+      publish();
+    }, 250);
+  });
+}
+
 export function useMonitoringUpdates() {
-  const [revision, setRevision] = useState(0);
+  const [state, setState] = useState({ revision, connectionStatus });
 
   useEffect(() => {
-    const token = localStorage.getItem("netfault_token");
-
-    if (!token) {
-      return undefined;
-    }
-
-    const socket = io(SOCKET_URL, {
-      auth: { token },
-      reconnection: true,
-      timeout: 5000,
-    });
-
-    // Coalesce related events (e.g. telemetry followed by prediction and alert)
-    // into one refresh, rather than starting multiple REST requests in a burst.
-    let refreshTimeout;
-
-    socket.on("monitoring:update", () => {
-      if (refreshTimeout) clearTimeout(refreshTimeout);
-
-      refreshTimeout = setTimeout(() => {
-        setRevision((current) => current + 1);
-      }, 250);
-    });
-
-    socket.on("connect_error", (error) => {
-      // Keep the UI usable if realtime is unavailable; manual refresh still works.
-      console.warn("Realtime connection unavailable:", error.message);
-    });
+    const subscriber = (nextState) => setState(nextState);
+    subscribers.add(subscriber);
+    ensureSocket();
+    subscriber({ revision, connectionStatus });
 
     return () => {
-      if (refreshTimeout) clearTimeout(refreshTimeout);
-      socket.removeAllListeners();
-      socket.disconnect();
+      subscribers.delete(subscriber);
+      if (subscribers.size === 0 && socket) {
+        if (refreshTimeout) clearTimeout(refreshTimeout);
+        socket.removeAllListeners();
+        socket.disconnect();
+        socket = undefined;
+        connectionStatus = "connecting";
+      }
     };
   }, []);
 
-  return revision;
+  return state;
 }

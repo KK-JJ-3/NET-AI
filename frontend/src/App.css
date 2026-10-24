@@ -2567,3 +2567,334 @@
     min-height: 280px;
   }
 }
+
+/* Dashboard refinement: aligned hierarchy, truthful status, and compact summaries */
+.dashboard-v2-page {
+  max-width: 1760px;
+  margin-inline: auto;
+  padding: 28px clamp(18px, 2.2vw, 36px) 44px;
+}
+
+.dashboard-v2-header h1 {
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-v2-header > div > p:last-child,
+.dashboard-section-title > span,
+.dashboard-panel-header > span {
+  line-height: 1.5;
+}
+
+.dashboard-section,
+.dashboard-panel,
+.dashboard-health-hero,
+.dashboard-ai-panel {
+  border-width: 1px;
+  border-radius: 5px;
+}
+
+/* Give section content a consistent inset so headings and cards never touch the frame. */
+.dashboard-section {
+  padding: 16px;
+}
+
+.dashboard-fault-overview .dashboard-section-title {
+  margin-bottom: 10px;
+}
+
+.dashboard-fault-summary-list {
+  width: 100%;
+  border-top: 1px solid var(--border);
+}
+
+.dashboard-fault-summary-list .dashboard-compact-row {
+  min-height: 64px;
+  padding: 12px 4px;
+}
+
+.dashboard-fault-summary-list .dashboard-compact-row > div:first-child strong {
+  font-size: 11px;
+}
+
+.dashboard-fault-summary-list .dashboard-compact-row > div:first-child span {
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.dashboard-fault-count {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-fault-count.is-detected {
+  color: #ff5a68;
+}
+.dashboard-fault-count.is-active {
+  color: #ffb020;
+}
+
+.dashboard-ai-panel .dashboard-ai-copy > .eyebrow {
+  color: var(--lime);
+}
+
+.dashboard-health-hero {
+  grid-template-columns: minmax(180px, 0.85fr) minmax(280px, 1.4fr) minmax(
+      220px,
+      0.9fr
+    );
+  gap: 14px;
+  align-items: center;
+}
+
+.dashboard-health-status strong {
+  font-size: clamp(20px, 2vw, 27px);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.health-status-dot {
+  width: 10px;
+  height: 10px;
+  border: 0;
+  box-shadow: none;
+  border-radius: 2px;
+}
+
+.health-status-dot.health-good {
+  background: #34d399;
+}
+.health-status-dot.health-warning {
+  background: #f59e0b;
+}
+.health-status-dot.health-unknown {
+  background: #94a3b8;
+}
+
+.dashboard-health-stat {
+  border-width: 1px;
+  border-radius: 4px;
+}
+
+.dashboard-section-title {
+  align-items: flex-end;
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.dashboard-section-title > span {
+  max-width: 40%;
+  text-align: right;
+}
+
+.dashboard-metric-card {
+  border-width: 1px;
+  border-left-width: 3px;
+  border-radius: 4px;
+}
+
+.dashboard-metric-card > strong {
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-fault-overview .dashboard-metric-grid {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 520px;
+}
+
+.dashboard-fault-overview .dashboard-metric-card {
+  min-height: 88px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: center;
+  align-items: center;
+  column-gap: 20px;
+  row-gap: 4px;
+}
+
+.dashboard-fault-overview .dashboard-metric-card-heading {
+  grid-column: 1;
+}
+
+.dashboard-fault-overview .dashboard-metric-card > strong {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  margin-top: 0;
+  font-size: 25px;
+  text-align: right;
+}
+
+.dashboard-fault-overview .dashboard-metric-subtitle {
+  margin-top: 0;
+}
+
+.dashboard-panel-header h2,
+.dashboard-section-title h2,
+.dashboard-ai-panel h2 {
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-ai-panel {
+  align-items: flex-start;
+}
+
+.dashboard-ai-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-ai-insights-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.dashboard-ai-insight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--lime);
+  border-radius: 4px;
+  background: var(--background, #101110);
+}
+
+.dashboard-ai-insight span,
+.dashboard-ai-insight strong,
+.dashboard-ai-insight small {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-ai-insight span {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 750;
+}
+.dashboard-ai-insight strong {
+  color: var(--lime);
+  font-size: 14px;
+}
+.dashboard-ai-insight small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.dashboard-ai-status {
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.dashboard-ai-status.is-connected span {
+  background: #34d399;
+}
+.dashboard-ai-status.is-unavailable span {
+  background: #ef4444;
+}
+.dashboard-ai-status.is-checking span {
+  background: #f59e0b;
+}
+
+.topbar-right {
+  gap: 14px;
+}
+.api-connection-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.api-connection-indicator .api-status-dot {
+  flex: 0 0 auto;
+}
+.api-connection-indicator.is-connected .api-status-dot {
+  background: #34d399;
+}
+.api-connection-indicator.is-connecting .api-status-dot {
+  background: #f59e0b;
+}
+.api-connection-indicator.is-disconnected .api-status-dot {
+  background: #ef4444;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-health-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard-fault-overview .dashboard-metric-grid {
+    max-width: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .topbar-right {
+    gap: 8px;
+  }
+  .api-connection-indicator strong {
+    font-size: 10px;
+  }
+  .dashboard-section-title > span {
+    max-width: 100%;
+    text-align: left;
+  }
+  .dashboard-ai-insights-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar-right {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .api-connection-indicator {
+    gap: 5px;
+  }
+  .dashboard-ai-panel {
+    gap: 14px;
+  }
+  .dashboard-fault-overview .dashboard-metric-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dashboard refinement: clearer welcome hierarchy and readable, non-duplicative AI summaries. */
+.dashboard-v2-header h1 {
+  font-size: clamp(30px, 2.5vw, 38px);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+.dashboard-v2-header > div > p:last-child {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.dashboard-ai-panel h2 {
+  font-size: 22px;
+}
+
+.dashboard-ai-panel .dashboard-ai-copy > p:not(.eyebrow) {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.dashboard-ai-insight span {
+  font-size: 13px;
+}
+.dashboard-ai-insight strong {
+  font-size: 15px;
+}
+.dashboard-ai-insight small {
+  font-size: 12px;
+  line-height: 1.45;
+}

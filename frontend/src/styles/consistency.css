@@ -1,0 +1,683 @@
+/*
+ * NETFAULT AI — consistency layer
+ * Loaded after page styles so shared contracts win over legacy page-local drift.
+ * Keep the established graphite / signal-lime identity; normalize geometry,
+ * spacing, typography, action hierarchy and responsive behavior across routes.
+ */
+
+:root {
+  --content-max: 1440px;
+  --page-gutter: clamp(18px, 2.4vw, 36px);
+  --page-gutter-mobile: 16px;
+  --radius-control: 4px;
+  --radius-card: 5px;
+  --control-height: 42px;
+  --line-subtle: #2d352f;
+  --surface-raised: var(--panel-2);
+  --surface-inset: var(--bg-2);
+  --motion-fast: 140ms ease;
+}
+
+/* One page gutter and one content measure, regardless of entry page. */
+.app-main > .page-scroll,
+.app-main > .devices-page,
+.app-main > .dashboard-v2-page,
+.app-main > .topology-page,
+.app-main > .detail-scroll-area {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: var(--page-gutter);
+}
+
+.app-main > .page-scroll > .predictions-page,
+.app-main > .page-scroll > .alerts-page,
+.app-main > .page-scroll > .alert-detail-page,
+.app-main > .page-scroll > .faults-page,
+.app-main > .page-scroll > .fault-detail-page,
+.app-main > .page-scroll > .prediction-detail-page {
+  width: min(100%, var(--content-max));
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.app-main > .devices-page,
+.app-main > .dashboard-v2-page,
+.app-main > .topology-page {
+  max-width: var(--content-max);
+  margin-inline: auto;
+}
+
+/* Consistent type scale for page titles, section titles and eyebrows. */
+.dashboard-v2-header h1,
+.devices-page .page-title,
+.predictions-header h1,
+.alerts-header h1,
+.faults-header h1,
+.topology-page .page-header h1,
+.alert-detail-header h1,
+.fault-detail-header h1,
+.prediction-detail-header h1 {
+  font-size: clamp(30px, 3vw, 42px);
+  line-height: 1.08;
+  font-weight: 850;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+
+.page-eyebrow,
+.dashboard-v2-header .eyebrow,
+.dashboard-section-title .eyebrow,
+.dashboard-panel-header .eyebrow {
+  margin-bottom: 8px;
+  color: var(--lime);
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 850;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.dashboard-v2-header > div > p:last-child,
+.devices-page .page-subtitle,
+.predictions-header p,
+.alerts-header p,
+.faults-header p,
+.topology-page .page-description,
+.alert-detail-header p,
+.fault-detail-header p,
+.prediction-detail-header p {
+  max-width: 72ch;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.dashboard-v2-header,
+.devices-hero,
+.predictions-header,
+.alerts-header,
+.faults-header {
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 26px;
+}
+
+/* The same restrained panel treatment across dashboard, list and detail pages. */
+.dashboard-section,
+.dashboard-panel,
+.dashboard-health-hero,
+.dashboard-ai-panel,
+.dashboard-metric-card,
+.dashboard-health-stat,
+.dashboard-reporting,
+.prediction-summary-card,
+.prediction-card,
+.prediction-detail-card,
+.prediction-detail-section,
+.alert-summary-card,
+.alert-card,
+.alert-detail-card,
+.alert-detail-section,
+.fault-summary-card,
+.fault-card,
+.fault-detail-card,
+.fault-detail-section,
+.device-card,
+.device-detail-card,
+.topology-card,
+.add-device-card {
+  border: 1px solid var(--line-subtle);
+  border-radius: var(--radius-card);
+  box-shadow: none;
+}
+
+.dashboard-section,
+.dashboard-panel,
+.dashboard-health-hero,
+.dashboard-ai-panel,
+.prediction-summary-card,
+.prediction-card,
+.prediction-detail-card,
+.prediction-detail-section,
+.alert-summary-card,
+.alert-card,
+.alert-detail-card,
+.alert-detail-section,
+.fault-summary-card,
+.fault-card,
+.fault-detail-card,
+.fault-detail-section,
+.device-card,
+.device-detail-card,
+.topology-card {
+  background: var(--panel);
+}
+
+.dashboard-health-stat,
+.dashboard-reporting,
+.dashboard-metric-card,
+.prediction-summary-card,
+.alert-summary-card,
+.fault-summary-card {
+  background: var(--surface-inset);
+}
+
+.dashboard-metric-card {
+  border-left-width: 3px;
+}
+
+.dashboard-metric-card.blue {
+  border-left-color: #65a9ff;
+}
+.dashboard-metric-card.red {
+  border-left-color: var(--danger);
+}
+.dashboard-metric-card.orange {
+  border-left-color: var(--warning);
+}
+.dashboard-metric-card.purple {
+  border-left-color: #c3a1ff;
+}
+
+.device-card,
+.alert-card,
+.fault-card,
+.prediction-card,
+.add-device-card,
+.topology-node {
+  transition:
+    border-color var(--motion-fast),
+    background-color var(--motion-fast),
+    transform var(--motion-fast);
+}
+
+.device-card:hover,
+.alert-card:hover,
+.fault-card:hover,
+.prediction-card:hover,
+.add-device-card:hover {
+  border-color: var(--lime);
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+
+.prediction-card:active,
+.alert-card:active,
+.fault-card:active,
+.device-card:active,
+.add-device-card:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* A single action hierarchy: lime for primary, outlined graphite for utility. */
+.primary-action,
+.dynamic-neo-btn,
+.neo-button,
+.nf-btn,
+.login-submit,
+.prediction-refresh-button,
+.alert-refresh-button,
+.total-card {
+  border: 1px solid var(--lime);
+  border-radius: var(--radius-control);
+  box-shadow: none;
+  font-weight: 800;
+}
+
+.primary-action,
+.dynamic-neo-btn,
+.neo-button,
+.nf-btn,
+.login-submit,
+.prediction-refresh-button,
+.alert-refresh-button {
+  min-height: var(--control-height);
+  transition:
+    background-color var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast),
+    transform var(--motion-fast);
+}
+
+.primary-action:hover:not(:disabled),
+.dynamic-neo-btn:hover:not(:disabled),
+.neo-button:hover:not(:disabled),
+.nf-btn:hover:not(:disabled),
+.login-submit:hover:not(:disabled),
+.prediction-refresh-button:hover:not(:disabled),
+.alert-refresh-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+.primary-action:active:not(:disabled),
+.dynamic-neo-btn:active:not(:disabled),
+.neo-button:active:not(:disabled),
+.nf-btn:active:not(:disabled),
+.login-submit:active:not(:disabled),
+.prediction-refresh-button:active:not(:disabled),
+.alert-refresh-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.secondary-action,
+.refresh-button,
+.fault-refresh-button,
+.alert-detail-back,
+.fault-detail-back,
+.prediction-detail-back,
+.prediction-retry-button,
+.alert-card-acknowledge,
+.alert-acknowledge-button,
+.device-card-actions button,
+.device-edit-button,
+.device-delete-button {
+  min-height: var(--control-height);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  box-shadow: none;
+  transition:
+    background-color var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast),
+    transform var(--motion-fast);
+}
+
+.secondary-action:hover:not(:disabled),
+.refresh-button:hover:not(:disabled),
+.fault-refresh-button:hover:not(:disabled),
+.alert-detail-back:hover:not(:disabled),
+.fault-detail-back:hover:not(:disabled),
+.prediction-detail-back:hover:not(:disabled),
+.prediction-retry-button:hover:not(:disabled),
+.alert-card-acknowledge:hover:not(:disabled),
+.alert-acknowledge-button:hover:not(:disabled),
+.device-card-actions button:hover:not(:disabled),
+.device-edit-button:hover:not(:disabled),
+.device-delete-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+button:disabled {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Shared control geometry and visible focus. */
+.app-main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.app-main select,
+.app-main textarea,
+.login-field input {
+  border-radius: var(--radius-control);
+}
+
+.app-main input:focus-visible,
+.app-main select:focus-visible,
+.app-main textarea:focus-visible,
+.app-main button:focus-visible,
+.app-main a:focus-visible,
+.sidebar button:focus-visible,
+.topbar button:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 3px;
+}
+
+.api-connection-indicator[data-state="checking"] .api-status-dot {
+  background: var(--warning);
+}
+
+.api-connection-indicator[data-state="offline"] .api-status-dot {
+  background: var(--danger);
+}
+
+.api-connection-indicator[data-state="offline"] strong {
+  color: var(--danger);
+}
+
+.api-connection-indicator[data-state="checking"] strong {
+  color: var(--warning);
+}
+
+/* Shell geometry: reserve a single vertical scroll owner for page content. */
+.app-shell {
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  background: var(--bg);
+}
+
+.sidebar {
+  border-right: 1px solid var(--border);
+  background: #101410;
+}
+
+.sidebar-brand,
+.sidebar-bottom,
+.topbar {
+  border-color: var(--border);
+  border-width: 1px;
+}
+
+.brand-mark,
+.user-avatar {
+  border-width: 1px;
+  border-radius: var(--radius-control);
+  box-shadow: none;
+}
+
+.sidebar-nav-item {
+  min-height: 44px;
+  border-width: 1px;
+  border-radius: var(--radius-control);
+  box-shadow: none;
+}
+
+.sidebar-nav-item.active,
+.sidebar-nav-item.active:hover {
+  border-color: var(--lime-dark);
+  box-shadow: inset 3px 0 0 #111;
+  transform: none;
+}
+
+.sidebar-nav-item:hover:not(:disabled) {
+  transform: none;
+}
+
+.logout-button {
+  min-height: 42px;
+  border-width: 1px;
+  border-radius: var(--radius-control);
+}
+
+.topbar {
+  background: #111511;
+}
+
+/* Stable states: loading, error and empty surfaces share the same footprint. */
+.page-state,
+.state-panel,
+.dashboard-state,
+.dashboard-error,
+.prediction-state,
+.alert-state,
+.topology-placeholder,
+.dashboard-empty-panel {
+  border-radius: var(--radius-card);
+}
+
+.state-panel {
+  border-width: 1px;
+  border-color: var(--line-subtle);
+  background: rgba(17, 23, 18, 0.72);
+}
+
+.error-state,
+.dashboard-error,
+.prediction-state-error,
+.alert-state-error {
+  border-color: color-mix(in srgb, var(--danger) 58%, var(--line-subtle));
+}
+
+/* Keep chart colours legible but let semantic states own the palette. */
+.dashboard-health-stat.good strong {
+  color: var(--success);
+}
+.dashboard-health-stat.warning strong {
+  color: var(--warning);
+}
+.dashboard-health-stat.danger strong {
+  color: var(--danger);
+}
+.health-good {
+  background: var(--success);
+}
+.health-status-dot.health-warning {
+  background: var(--warning);
+}
+.dashboard-live-badge {
+  border-radius: 3px;
+}
+
+@media (max-width: 1280px) {
+  .dashboard-health-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  }
+
+  .dashboard-reporting {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-main-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-main-grid > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 960px) {
+  .app-shell {
+    grid-template-columns: 216px minmax(0, 1fr);
+  }
+
+  .sidebar {
+    width: 216px;
+  }
+
+  .dashboard-main-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-main-grid > :last-child {
+    grid-column: auto;
+  }
+
+  .dashboard-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .app-shell {
+    display: block;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    overflow: visible;
+  }
+
+  .sidebar-brand {
+    height: 62px;
+    flex-basis: 62px;
+    padding-inline: 16px;
+  }
+
+  .brand-mark {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .sidebar-navigation {
+    padding: 8px 12px 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .sidebar-label {
+    display: none;
+  }
+
+  .sidebar-navigation nav {
+    width: max-content;
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .sidebar-nav-item {
+    width: auto;
+    min-width: 92px;
+    min-height: 40px;
+    justify-content: center;
+    padding-inline: 10px;
+  }
+
+  .sidebar-bottom {
+    display: none;
+  }
+
+  .app-area {
+    display: block;
+    min-height: calc(100vh - 112px);
+    overflow: visible;
+  }
+
+  .app-main {
+    height: auto;
+    min-height: calc(100vh - 112px);
+    overflow: visible;
+  }
+
+  .topbar {
+    min-height: 54px;
+    padding-inline: var(--page-gutter-mobile);
+  }
+
+  .topbar-context strong {
+    font-size: 13px;
+  }
+  .topbar-right {
+    gap: 10px;
+  }
+  .api-connection-indicator {
+    font-size: 9px;
+    gap: 5px;
+  }
+  .user-profile-copy {
+    display: none;
+  }
+
+  .app-main > .page-scroll,
+  .app-main > .devices-page,
+  .app-main > .dashboard-v2-page,
+  .app-main > .topology-page,
+  .app-main > .detail-scroll-area {
+    padding: 22px var(--page-gutter-mobile) 36px;
+  }
+
+  .dashboard-health-hero {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px;
+  }
+
+  .dashboard-reporting {
+    grid-column: auto;
+  }
+
+  .dashboard-health-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dashboard-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-section-title,
+  .dashboard-panel-header {
+    align-items: flex-start;
+  }
+
+  .dashboard-section-title > span {
+    display: none;
+  }
+
+  .devices-hero,
+  .predictions-header,
+  .alerts-header,
+  .faults-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .devices-hero > *,
+  .predictions-header > *,
+  .alerts-header > *,
+  .faults-header > * {
+    max-width: 100%;
+  }
+
+  .total-card {
+    width: 100%;
+    min-width: 0;
+    min-height: 74px;
+    flex-basis: auto;
+  }
+
+  .topology-card-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .topology-device-summary {
+    width: 100%;
+    min-width: 0;
+    justify-content: space-between;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .dashboard-metric-grid,
+  .dashboard-health-stats,
+  .prediction-summary-grid,
+  .alert-summary-grid,
+  .fault-summary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-section-title h2,
+  .dashboard-panel-header h2 {
+    font-size: 17px;
+  }
+
+  .topbar-right {
+    gap: 8px;
+  }
+  .api-connection-indicator strong {
+    max-width: 76px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .device-card,
+  .alert-card,
+  .fault-card,
+  .prediction-card,
+  .add-device-card,
+  .primary-action,
+  .secondary-action,
+  .refresh-button,
+  .fault-refresh-button,
+  .alert-refresh-button,
+  .prediction-refresh-button {
+    transition: none !important;
+  }
+}

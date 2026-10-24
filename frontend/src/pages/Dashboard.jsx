@@ -19,7 +19,6 @@ import {
   getFaults,
   getPredictions,
 } from "../api/client";
-import { useAuth } from "../auth/useAuth";
 import { useMonitoringUpdates } from "../hooks/useMonitoringUpdates";
 
 const METRIC_CONFIG = {
@@ -50,8 +49,7 @@ const METRIC_CONFIG = {
 };
 
 function Dashboard() {
-  const { user } = useAuth();
-  const realtimeRevision = useMonitoringUpdates();
+  const { revision: realtimeRevision } = useMonitoringUpdates();
 
   const [summary, setSummary] = useState(null);
   const [devices, setDevices] = useState([]);
@@ -62,6 +60,7 @@ function Dashboard() {
   const [activeMetric, setActiveMetric] = useState("latency");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [aiServiceStatus, setAiServiceStatus] = useState("checking");
 
   useEffect(() => {
     async function loadDashboard() {
@@ -118,6 +117,36 @@ function Dashboard() {
 
     loadDashboard();
   }, [realtimeRevision]);
+
+  useEffect(() => {
+    const apiBaseUrl =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+    let alive = true;
+    let timer;
+    const checkAiService = async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}/health`, {
+          cache: "no-store",
+        });
+        const body = await response.json();
+        const data = body?.data ?? body;
+        if (alive)
+          setAiServiceStatus(
+            response.ok && data?.aiService === "connected"
+              ? "connected"
+              : "unavailable",
+          );
+      } catch {
+        if (alive) setAiServiceStatus("unavailable");
+      }
+      if (alive) timer = setTimeout(checkAiService, 30000);
+    };
+    checkAiService();
+    return () => {
+      alive = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
 
   const latestTelemetryByDevice = useMemo(() => {
     return telemetry
@@ -282,11 +311,18 @@ function Dashboard() {
     return new Date(Math.max(...timestamps));
   }, [latestTelemetryByDevice]);
 
-  const healthStatus =
-    Number(summary?.devices?.down ?? 0) > 0 ||
-    Number(summary?.devices?.degraded ?? 0) > 0
-      ? "DEGRADED"
-      : "HEALTHY";
+  const hasDeviceSummary =
+    Number.isFinite(Number(summary?.devices?.total)) &&
+    Number(summary?.devices?.total) > 0;
+  const downCount = Number(summary?.devices?.down ?? 0);
+  const degradedCount = Number(summary?.devices?.degraded ?? 0);
+  const healthStatus = !hasDeviceSummary
+    ? "UNKNOWN"
+    : downCount > 0
+      ? "CRITICAL"
+      : degradedCount > 0
+        ? "DEGRADED"
+        : "OPERATIONAL";
 
   const activeMetricConfig = METRIC_CONFIG[activeMetric];
 
@@ -295,8 +331,8 @@ function Dashboard() {
       <header className="dashboard-v2-header">
         <div>
           <p className="eyebrow">NETFAULT AI</p>
-          <h1>Welcome back, {user?.username}</h1>
-          <p>Here&apos;s your network at a glance.</p>
+          <h1>Network overview</h1>
+          <p>Live health, telemetry, and fault activity at a glance.</p>
         </div>
       </header>
 
@@ -324,18 +360,22 @@ function Dashboard() {
               <div className="dashboard-health-status">
                 <span
                   className={`health-status-dot ${
-                    healthStatus === "HEALTHY"
+                    healthStatus === "OPERATIONAL"
                       ? "health-good"
-                      : "health-warning"
+                      : healthStatus === "UNKNOWN"
+                        ? "health-unknown"
+                        : "health-warning"
                   }`}
                 />
                 <strong>{healthStatus}</strong>
               </div>
 
               <p>
-                {healthStatus === "HEALTHY"
-                  ? "Network operating normally"
-                  : "One or more devices need attention"}
+                {healthStatus === "OPERATIONAL"
+                  ? "All registered devices report an operational state"
+                  : healthStatus === "UNKNOWN"
+                    ? "Device health cannot be determined yet"
+                    : `${downCount} down · ${degradedCount} degraded — attention required`}
               </p>
             </div>
 
@@ -433,7 +473,7 @@ function Dashboard() {
           </section>
 
           {/* Fault Metrics */}
-          <section className="dashboard-section">
+          <section className="dashboard-section dashboard-fault-overview">
             <div className="dashboard-section-title">
               <div>
                 <p className="eyebrow">FAULT OVERVIEW</p>
@@ -442,18 +482,25 @@ function Dashboard() {
               <span>Current system fault status</span>
             </div>
 
-            <div className="dashboard-metric-grid">
-              <MetricCard
-                label="Detected Faults"
-                value={summary?.faults?.total ?? 0}
-                tone="red"
-              />
-
-              <MetricCard
-                label="Active Faults"
-                value={summary?.faults?.confirmed ?? 0}
-                tone="orange"
-              />
+            <div className="dashboard-fault-summary-list">
+              <div className="dashboard-compact-row">
+                <div>
+                  <strong>Detected faults</strong>
+                  <span>Total faults recorded by monitoring</span>
+                </div>
+                <strong className="dashboard-fault-count is-detected">
+                  {summary?.faults?.total ?? 0}
+                </strong>
+              </div>
+              <div className="dashboard-compact-row">
+                <div>
+                  <strong>Active faults</strong>
+                  <span>Faults currently confirmed as active</span>
+                </div>
+                <strong className="dashboard-fault-count is-active">
+                  {summary?.faults?.confirmed ?? 0}
+                </strong>
+              </div>
             </div>
           </section>
 
@@ -789,21 +836,104 @@ function Dashboard() {
             </div>
           </section>
 
-          {/* AI Standby */}
+          {/* AI service state and the latest real prediction records */}
           <section className="dashboard-ai-panel">
-            <div>
+            <div className="dashboard-ai-copy">
               <p className="eyebrow">AI INSIGHTS</p>
-              <h2>AI analysis is not active yet</h2>
+              <h2>
+                {aiServiceStatus === "connected"
+                  ? "AI service is reachable"
+                  : aiServiceStatus === "checking"
+                    ? "Checking AI service…"
+                    : "AI service unavailable"}
+              </h2>
               <p>
-                The monitoring dashboard is ready for the AI prediction
-                pipeline. Once the AI service is connected, predictions and
-                fault insights will appear here.
+                {aiServiceStatus === "connected"
+                  ? predictions.length
+                    ? "AI signal summary based on the most recent saved predictions."
+                    : "The AI service is online. No prediction records are available yet to summarize."
+                  : "AI signal summaries are paused until the service is reachable. Previously saved predictions remain available in Predictions."}
               </p>
+              {aiServiceStatus === "connected" &&
+                predictions.length > 0 &&
+                (() => {
+                  const usable = predictions.filter((item) =>
+                    Number.isFinite(Number(item.riskScore)),
+                  );
+                  const elevated = usable.filter(
+                    (item) => Number(item.riskScore) >= 0.7,
+                  ).length;
+                  const typeCounts = usable.reduce((counts, item) => {
+                    const type = formatDashboardLabel(
+                      item.faultType || "Unknown fault",
+                    );
+                    counts[type] = (counts[type] || 0) + 1;
+                    return counts;
+                  }, {});
+                  const dominantType = Object.entries(typeCounts).sort(
+                    (a, b) => b[1] - a[1],
+                  )[0];
+                  const windows = predictions
+                    .map((item) => Number(item.predictedWindowMinutes))
+                    .filter((value) => Number.isFinite(value) && value >= 0);
+                  const averageWindow = windows.length
+                    ? Math.round(
+                        windows.reduce((sum, value) => sum + value, 0) /
+                          windows.length,
+                      )
+                    : null;
+                  return (
+                    <div
+                      className="dashboard-ai-insights-list"
+                      aria-label="AI signal summary"
+                    >
+                      <div className="dashboard-ai-insight">
+                        <span>Elevated risk signals</span>
+                        <strong>
+                          {usable.length
+                            ? `${elevated} of ${usable.length}`
+                            : "Unavailable"}
+                        </strong>
+                        <small>Recent predictions at 70% risk or higher</small>
+                      </div>
+                      <div className="dashboard-ai-insight">
+                        <span>Most common fault pattern</span>
+                        <strong>
+                          {dominantType ? dominantType[0] : "Unavailable"}
+                        </strong>
+                        <small>
+                          {dominantType
+                            ? `${dominantType[1]} recent prediction${dominantType[1] === 1 ? "" : "s"}`
+                            : "No usable risk scores"}
+                        </small>
+                      </div>
+                      <div className="dashboard-ai-insight">
+                        <span>Average forecast window</span>
+                        <strong>
+                          {averageWindow == null
+                            ? "Unavailable"
+                            : `${averageWindow} min`}
+                        </strong>
+                        <small>
+                          Across recent predictions with a forecast window
+                        </small>
+                      </div>
+                    </div>
+                  );
+                })()}
             </div>
-
-            <div className="dashboard-ai-status">
+            <div
+              className={`dashboard-ai-status is-${aiServiceStatus}`}
+              role="status"
+            >
               <span />
-              <strong>Awaiting AI service</strong>
+              <strong>
+                {aiServiceStatus === "connected"
+                  ? "AI ONLINE"
+                  : aiServiceStatus === "checking"
+                    ? "CHECKING SERVICE"
+                    : "SERVICE OFFLINE"}
+              </strong>
             </div>
           </section>
         </div>
@@ -821,7 +951,7 @@ function HealthStat({ label, value, tone = "" }) {
   );
 }
 
-function MetricCard({ label, value, unit, tone }) {
+function MetricCard({ label, value, unit = "", tone }) {
   return (
     <div className={`dashboard-metric-card ${tone}`}>
       <div className="dashboard-metric-card-heading">
