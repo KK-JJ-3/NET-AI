@@ -5,8 +5,14 @@ from typing import Any
 
 import joblib
 import numpy as np
+import xgboost as xgb
 from sklearn.utils.class_weight import compute_sample_weight
 from xgboost import XGBClassifier
+
+from app.probability_calibration import (
+    probabilities_from_logits,
+    validate_temperature,
+)
 
 
 FAULT_CLASSES = ("normal", "congestion", "device_failure")
@@ -40,6 +46,7 @@ class FaultClassifier:
         self.model = self._new_model(num_classes=3)
         self._class_labels: tuple[str, ...] = ()
         self.is_fitted = False
+        self.probability_temperature = 1.0
 
     def _new_model(self, num_classes: int) -> XGBClassifier:
         # The project has three classes, but supporting a two-class fit keeps
@@ -101,9 +108,29 @@ class FaultClassifier:
         encoded = np.asarray(self.model.predict(features), dtype=int)
         return np.asarray([self._class_labels[index] for index in encoded], dtype=str)
 
+    def set_probability_temperature(self, temperature: float) -> None:
+        """Set a held-out fitted temperature for probability calibration."""
+        self.probability_temperature = validate_temperature(temperature)
+
+    def predict_logits(self, features: np.ndarray) -> np.ndarray:
+        """Return raw XGBoost margins in the same order as ``classes()``."""
+        self._validate_input(features)
+        return np.asarray(
+            self.model.get_booster().predict(
+                xgb.DMatrix(np.asarray(features, dtype=float)),
+                output_margin=True,
+            ),
+            dtype=float,
+        )
+
     def predict_proba(self, features: np.ndarray) -> np.ndarray:
         self._validate_input(features)
-        return self.model.predict_proba(features)
+        if self.probability_temperature == 1.0:
+            return self.model.predict_proba(features)
+        return probabilities_from_logits(
+            self.predict_logits(features),
+            self.probability_temperature,
+        )
 
     def classes(self) -> np.ndarray:
         if not self.is_fitted:
@@ -134,6 +161,7 @@ class FaultClassifier:
                     "subsample": self.subsample,
                     "colsample_bytree": self.colsample_bytree,
                     "random_state": self.random_state,
+                    "probability_temperature": self.probability_temperature,
                 },
             },
             output_path,
@@ -171,6 +199,9 @@ class FaultClassifier:
         ):
             if key in config:
                 setattr(self, key, config[key])
+        self.probability_temperature = validate_temperature(
+            config.get("probability_temperature", 1.0)
+        )
         self.is_fitted = True
 
     @staticmethod

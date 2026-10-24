@@ -1,0 +1,15 @@
+{
+  "method": "multiclass_temperature_scaling",
+  "temperature": 1.8063036919933362,
+  "classifier_sha256": "8a6cb7df3bef3dee48c4aeeb036e318370f3feb75480914e3fc7ff1ddd38e0ca",
+  "calibration_seed": 43,
+  "calibration_split": "episode-grouped held-out split",
+  "calibration_samples": 6591,
+  "forecast_horizon_minutes": 20,
+  "window_size": 15,
+  "class_order": [
+    "normal",
+    "congestion",
+    "device_failure"
+  ]
+}

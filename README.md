@@ -254,6 +254,18 @@ The backend can save telemetry even if the AI service is temporarily unavailable
 - **No charts or predictions appear:** make sure the simulator is targeting a real device ID, the AI service is healthy, and enough telemetry has been submitted. Check the backend and AI-service terminal logs. The simulator now queries the device's latest timestamp before a run; if that lookup fails, check backend availability and authentication.
 - **Frontend cannot reach the API:** confirm the backend is running on port 5000 and that the frontend API base URL matches it.
 
+## Risk-score interpretation and saturation (A3)
+
+NetFault AI currently keeps the existing risk calculation; it does not apply a post-hoc calibration transform.
+
+- **Forecasts:** `riskScore = 1 - P(normal)`, the sum of the XGBoost classifier's congestion and device-failure probabilities for the configured forecast horizon. Because the classifier can return highly confident probabilities, scores may cluster near 0 or 1. The score is model-derived and should not be presented as a separately calibrated real-world probability.
+- **Active detections:** `ai-service/app/predictor.py` returns `riskScore = 1.0` when two consecutive readings indicate an unavailable device or when the configured active-congestion thresholds are both met. This fixed value represents an already-detected condition; it is not a forecast probability.
+- **UI rounding:** risk values are displayed as whole percentages, so a forecast score just below `1.0` can display as `100%`. Check the stored numeric value and explanation when distinguishing a near-maximum forecast from an active detection.
+- **Calibration decision:** a prior calibration experiment worsened Brier score and log loss, so no calibration layer is enabled. Do not change the formula or add a calibration transform solely to make scores look less saturated. Revisit calibration only with held-out evaluation and report Brier score/log loss alongside false-positive and missed-fault rates, ideally across multiple seeds.
+- **Decision threshold:** the current forecast decision threshold remains `0.40`. Threshold tuning changes which class is emitted; it does not calibrate the score itself. Existing threshold-sweep reports are classification evaluations, not evidence that the scores are calibrated.
+
+The current A3 resolution is therefore to preserve the tested decision behavior, make the score's meaning explicit, and treat calibration as a limitation until a validated alternative improves proper scoring rules without unacceptable detection regressions.
+
 ## Project status and limitations
 
 This is a development/demo project. Its supplied model evaluation and simulator results are synthetic. Run the browser-based end-to-end checks and validate the demo flow in your own environment before presenting it as complete. The documented training and evaluation commands are provided for reproducibility; retraining is not part of the normal startup procedure.

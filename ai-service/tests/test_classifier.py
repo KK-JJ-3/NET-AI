@@ -82,3 +82,39 @@ def test_feature_count_mismatch_is_rejected() -> None:
     classifier.fit(features, labels)
     with pytest.raises(ValueError, match="Expected 4 feature columns"):
         classifier.predict(features[:, :3])
+
+
+def test_temperature_scaling_softens_probabilities_without_changing_class_order() -> None:
+    features, labels = sample_data()
+    classifier = make_classifier()
+    classifier.fit(features, labels)
+    raw = classifier.predict_proba(features[:8])
+
+    classifier.set_probability_temperature(2.0)
+    calibrated = classifier.predict_proba(features[:8])
+
+    assert np.allclose(calibrated.sum(axis=1), 1.0, atol=1e-6)
+    assert np.all(np.argmax(calibrated, axis=1) == np.argmax(raw, axis=1))
+    assert np.all(np.max(calibrated, axis=1) < np.max(raw, axis=1))
+
+
+def test_temperature_is_preserved_by_classifier_save_and_load(tmp_path) -> None:
+    features, labels = sample_data()
+    classifier = make_classifier()
+    classifier.fit(features, labels)
+    classifier.set_probability_temperature(1.8)
+    expected = classifier.predict_proba(features[:5])
+
+    model_path = tmp_path / "classifier.joblib"
+    classifier.save(model_path)
+    loaded = FaultClassifier()
+    loaded.load(model_path)
+
+    assert loaded.probability_temperature == pytest.approx(1.8)
+    assert np.allclose(loaded.predict_proba(features[:5]), expected)
+
+
+def test_invalid_probability_temperature_is_rejected() -> None:
+    classifier = make_classifier()
+    with pytest.raises(ValueError, match="greater than 0"):
+        classifier.set_probability_temperature(0.0)

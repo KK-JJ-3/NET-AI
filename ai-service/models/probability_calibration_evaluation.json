@@ -1,0 +1,148 @@
+{
+  "task": "xgboost_probability_temperature_calibration",
+  "evaluation_only": true,
+  "production_temperature": 1.8063036919933362,
+  "calibration_seed": 43,
+  "test_seeds": [
+    44,
+    45,
+    46
+  ],
+  "episode_grouped_splits": true,
+  "forecast_horizon_minutes": 20,
+  "window_size": 15,
+  "calibration_metrics": {
+    "raw": {
+      "samples": 6591,
+      "risk_brier_score": 0.03264935567471791,
+      "risk_log_loss": 0.12644594107945017,
+      "multiclass_brier_score": 0.0684076832555209,
+      "multiclass_log_loss": 0.13319165554618848,
+      "normal_false_positive_rate": 0.048797905260652225,
+      "fault_miss_rate": 0.0301255230125523,
+      "critical_share_of_warnings": 0.9460959175584621,
+      "risk_at_least_095_share_of_warnings": 0.8803012286959968,
+      "median_warning_risk": 0.9999293395309177
+    },
+    "temperature_scaled": {
+      "samples": 6591,
+      "risk_brier_score": 0.029474844626840465,
+      "risk_log_loss": 0.09613578483441404,
+      "multiclass_brier_score": 0.06234345602830347,
+      "multiclass_log_loss": 0.1059116998298747,
+      "normal_false_positive_rate": 0.05284456081885265,
+      "fault_miss_rate": 0.02594142259414226,
+      "critical_share_of_warnings": 0.8968627450980392,
+      "risk_at_least_095_share_of_warnings": 0.7517647058823529,
+      "median_warning_risk": 0.9948448225301536
+    }
+  },
+  "per_test_seed": {
+    "44": {
+      "raw": {
+        "samples": 6620,
+        "risk_brier_score": 0.027469836947788286,
+        "risk_log_loss": 0.09574237958898386,
+        "multiclass_brier_score": 0.05817883239101421,
+        "multiclass_log_loss": 0.10275449313980135,
+        "normal_false_positive_rate": 0.031793229643183894,
+        "fault_miss_rate": 0.04581850533807829,
+        "critical_share_of_warnings": 0.9238178633975481,
+        "risk_at_least_095_share_of_warnings": 0.8590192644483362,
+        "median_warning_risk": 0.9998939010053617
+      },
+      "temperature_scaled": {
+        "samples": 6620,
+        "risk_brier_score": 0.024891324813643662,
+        "risk_log_loss": 0.07944918785027687,
+        "multiclass_brier_score": 0.05328291341253034,
+        "multiclass_log_loss": 0.08879369803262795,
+        "normal_false_positive_rate": 0.03385178408051235,
+        "fault_miss_rate": 0.03959074733096085,
+        "critical_share_of_warnings": 0.8760294755093194,
+        "risk_at_least_095_share_of_warnings": 0.7360208062418726,
+        "median_warning_risk": 0.9934442332492472
+      }
+    },
+    "45": {
+      "raw": {
+        "samples": 6576,
+        "risk_brier_score": 0.03497734394976038,
+        "risk_log_loss": 0.12831661547608464,
+        "multiclass_brier_score": 0.07303661505617771,
+        "multiclass_log_loss": 0.13521501610544642,
+        "normal_false_positive_rate": 0.04557139518579107,
+        "fault_miss_rate": 0.04005224205485416,
+        "critical_share_of_warnings": 0.93875,
+        "risk_at_least_095_share_of_warnings": 0.87375,
+        "median_warning_risk": 0.9999137515208374
+      },
+      "temperature_scaled": {
+        "samples": 6576,
+        "risk_brier_score": 0.030956988584055704,
+        "risk_log_loss": 0.09747326539058511,
+        "multiclass_brier_score": 0.06556312199346245,
+        "multiclass_log_loss": 0.10788640633657672,
+        "normal_false_positive_rate": 0.05071278336059827,
+        "fault_miss_rate": 0.032651284283848496,
+        "critical_share_of_warnings": 0.8823288232882329,
+        "risk_at_least_095_share_of_warnings": 0.7314473144731447,
+        "median_warning_risk": 0.9941878879644147
+      }
+    },
+    "46": {
+      "raw": {
+        "samples": 6594,
+        "risk_brier_score": 0.035070138601049856,
+        "risk_log_loss": 0.13207017141555305,
+        "multiclass_brier_score": 0.0727020610140159,
+        "multiclass_log_loss": 0.13895381590968686,
+        "normal_false_positive_rate": 0.037830446672743843,
+        "fault_miss_rate": 0.05258386219401632,
+        "critical_share_of_warnings": 0.924645390070922,
+        "risk_at_least_095_share_of_warnings": 0.8585992907801419,
+        "median_warning_risk": 0.9998864610349962
+      },
+      "temperature_scaled": {
+        "samples": 6594,
+        "risk_brier_score": 0.031624262403151485,
+        "risk_log_loss": 0.10059213132297365,
+        "multiclass_brier_score": 0.06650125923881155,
+        "multiclass_log_loss": 0.11064656354050484,
+        "normal_false_positive_rate": 0.042616226071103006,
+        "fault_miss_rate": 0.04261106074342702,
+        "critical_share_of_warnings": 0.864723792953458,
+        "risk_at_least_095_share_of_warnings": 0.7264027838190518,
+        "median_warning_risk": 0.9930127644822199
+      }
+    }
+  },
+  "aggregate_test_metrics": {
+    "raw": {
+      "samples": 19790,
+      "risk_brier_score": 0.03249690896125849,
+      "risk_log_loss": 0.11867080983142811,
+      "multiclass_brier_score": 0.06795502988197875,
+      "multiclass_log_loss": 0.12560233211740152,
+      "normal_false_positive_rate": 0.03834649896464453,
+      "fault_miss_rate": 0.046067249296400534,
+      "critical_share_of_warnings": 0.9292507204610951,
+      "risk_at_least_095_share_of_warnings": 0.8639769452449567,
+      "median_warning_risk": 0.9998998545626376
+    },
+    "temperature_scaled": {
+      "samples": 19790,
+      "risk_brier_score": 0.029150283652423052,
+      "risk_log_loss": 0.09248319003137993,
+      "multiclass_brier_score": 0.061767826197103755,
+      "multiclass_log_loss": 0.1024193395164939,
+      "normal_false_positive_rate": 0.04233453485696756,
+      "fault_miss_rate": 0.03821656050955414,
+      "critical_share_of_warnings": 0.8745209368346345,
+      "risk_at_least_095_share_of_warnings": 0.7312987934705465,
+      "median_warning_risk": 0.9936624655895384
+    }
+  },
+  "accepted_for_production": true,
+  "synthetic_data_warning": "These results use generated simulator episodes and do not establish real-network calibration."
+}

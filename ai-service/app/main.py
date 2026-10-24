@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException
 
 from app.models.anomaly import AnomalyDetector
 from app.models.classifier import FaultClassifier
+from app.probability_calibration import load_calibration_temperature
 from app.predictor import FaultPredictor
 from app.schemas import PredictRequest, PredictResponse
 
@@ -22,6 +23,10 @@ ANOMALY_MODEL_PATH = (
 
 CLASSIFIER_MODEL_PATH = (
     MODEL_DIR / "xgboost_classifier.joblib"
+)
+
+PROBABILITY_CALIBRATION_PATH = (
+    MODEL_DIR / "probability_calibration.json"
 )
 
 FEATURE_IMPORTANCE_PATH = (
@@ -41,6 +46,12 @@ def load_predictor() -> FaultPredictor:
 
     classifier = FaultClassifier()
     classifier.load(CLASSIFIER_MODEL_PATH)
+    classifier.set_probability_temperature(
+        load_calibration_temperature(
+            PROBABILITY_CALIBRATION_PATH,
+            CLASSIFIER_MODEL_PATH,
+        )
+    )
 
     if not FEATURE_IMPORTANCE_PATH.exists():
         raise FileNotFoundError(

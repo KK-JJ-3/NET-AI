@@ -19,10 +19,13 @@ def calculate_risk(
     probabilities: dict[str, float],
 ) -> float:
     """
-    Calculate the probability of a future fault within the
-    trained forecast horizon.
+    Calculate the model-derived future-fault risk score.
 
-    Risk = 1 - P(normal).
+    Risk = 1 - P(normal), equivalently the sum of the classifier's
+    congestion and device-failure probabilities. FaultClassifier applies a
+    held-out-fitted temperature to the XGBoost logits before this function
+    receives the probabilities. Calibration is validated on generated
+    episodes only; it is not proof of real-world probability calibration.
     """
     normal_probability = probabilities.get("normal")
 

@@ -112,6 +112,8 @@ class FaultPredictor:
         )
 
         if device_unavailable:
+            # This is an active rule-based detection, not a classifier
+            # forecast. The fixed 1.0 score signals an already-observed fault.
             return PredictResponse(
                 faultType="device_failure",
                 riskScore=1.0,
@@ -146,6 +148,8 @@ class FaultPredictor:
         )
 
         if active_congestion:
+            # This is an active rule-based detection, not a classifier
+            # forecast. The fixed 1.0 score signals an already-observed fault.
             return PredictResponse(
                 faultType="congestion",
                 riskScore=1.0,

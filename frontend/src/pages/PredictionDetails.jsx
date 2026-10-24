@@ -415,8 +415,12 @@ function PredictionDetails({ prediction, onBack }) {
 
             <p className="prediction-ai-footnote">
               Threshold comparisons are shown only where a configured threshold
-              is available. A risk score is the model's estimated risk, not a
-              guarantee that a fault will occur.
+              is available. Forecast risk uses temperature-scaled model
+              probabilities fitted on held-out synthetic episodes; it is not a
+              verified real-world fault probability. A 100% score tagged as
+              [ACTIVE_FAULT_DETECTION] is a rule-based detection of an already
+              active fault, not a forecast. The 20-minute prediction window is a
+              forecast horizon, not an estimated time-to-fault.
             </p>
           </div>
         </section>
