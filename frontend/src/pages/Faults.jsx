@@ -41,6 +41,14 @@ function formatDate(value) {
   return date.toLocaleString();
 }
 
+function formatDeviceLabel(fault) {
+  const deviceName = fault.device?.name?.trim();
+
+  return deviceName
+    ? `#${fault.deviceId} · ${deviceName}`
+    : `#${fault.deviceId}`;
+}
+
 function getSeverityClass(severity) {
   switch (severity) {
     case "low":
@@ -123,16 +131,17 @@ function FaultDetails({ fault, onBack }) {
           <div className="fault-detail-card">
             <span>Device</span>
 
-            <strong>#{fault.deviceId}</strong>
+            <strong className="fault-device-value">
+              {formatDeviceLabel(fault)}
+            </strong>
           </div>
 
           <div className="fault-detail-card">
             <span>Started</span>
 
-            <strong>
+            <strong className="fault-date-value">
               <Clock3 size={16} aria-hidden="true" />
-
-              {formatDate(fault.startedAt)}
+              <span>{formatDate(fault.startedAt)}</span>
             </strong>
           </div>
         </section>
@@ -154,7 +163,9 @@ function FaultDetails({ fault, onBack }) {
             <div>
               <span>Device</span>
 
-              <strong>#{fault.deviceId}</strong>
+              <strong className="fault-device-value">
+                {formatDeviceLabel(fault)}
+              </strong>
             </div>
 
             <div>
@@ -172,19 +183,28 @@ function FaultDetails({ fault, onBack }) {
             <div>
               <span>Started at</span>
 
-              <strong>{formatDate(fault.startedAt)}</strong>
+              <strong className="fault-date-value">
+                <Clock3 size={15} aria-hidden="true" />
+                <span>{formatDate(fault.startedAt)}</span>
+              </strong>
             </div>
 
             <div>
               <span>Resolved at</span>
 
-              <strong>{formatDate(fault.resolvedAt)}</strong>
+              <strong className="fault-date-value">
+                {fault.resolvedAt && <Clock3 size={15} aria-hidden="true" />}
+                <span>{formatDate(fault.resolvedAt)}</span>
+              </strong>
             </div>
 
             <div>
               <span>Created at</span>
 
-              <strong>{formatDate(fault.createdAt)}</strong>
+              <strong className="fault-date-value">
+                <Clock3 size={15} aria-hidden="true" />
+                <span>{formatDate(fault.createdAt)}</span>
+              </strong>
             </div>
           </div>
         </section>
@@ -543,26 +563,32 @@ function Faults() {
                     <div className="fault-metric">
                       <span>Device</span>
 
-                      <strong>#{fault.deviceId}</strong>
+                      <strong className="fault-device-value">
+                        {formatDeviceLabel(fault)}
+                      </strong>
                     </div>
 
                     <div className="fault-metric">
                       <span>Started</span>
 
-                      <strong>
+                      <strong className="fault-date-value">
                         <Clock3 size={15} aria-hidden="true" />
-
-                        {formatDate(fault.startedAt)}
+                        <span>{formatDate(fault.startedAt)}</span>
                       </strong>
                     </div>
 
                     <div className="fault-metric">
                       <span>Resolved</span>
 
-                      <strong>
-                        {fault.resolvedAt
-                          ? formatDate(fault.resolvedAt)
-                          : "Not resolved"}
+                      <strong className="fault-date-value">
+                        {fault.resolvedAt && (
+                          <Clock3 size={15} aria-hidden="true" />
+                        )}
+                        <span>
+                          {fault.resolvedAt
+                            ? formatDate(fault.resolvedAt)
+                            : "Not resolved"}
+                        </span>
                       </strong>
                     </div>
                   </div>

@@ -118,7 +118,10 @@ function AlertDetails({ alert, onBack, onAcknowledge, acknowledging }) {
         <section className="alert-detail-summary">
           <div className="alert-detail-card">
             <span>Device</span>
-            <strong>#{alert.deviceId}</strong>
+            <strong className="alert-device-value">
+              <span>{alert.device?.name || "Unknown device"}</span>
+              <small>Device #{alert.deviceId}</small>
+            </strong>
           </div>
 
           <div className="alert-detail-card">
@@ -158,6 +161,11 @@ function AlertDetails({ alert, onBack, onAcknowledge, acknowledging }) {
             </div>
 
             <div>
+              <span>Device name</span>
+              <strong>{alert.device?.name || "Unknown device"}</strong>
+            </div>
+
+            <div>
               <span>Device ID</span>
               <strong>#{alert.deviceId}</strong>
             </div>
@@ -171,7 +179,10 @@ function AlertDetails({ alert, onBack, onAcknowledge, acknowledging }) {
 
             <div>
               <span>Created at</span>
-              <strong>{formatDate(alert.createdAt)}</strong>
+              <strong className="alert-inline-time">
+                <Clock3 size={15} aria-hidden="true" />
+                {formatDate(alert.createdAt)}
+              </strong>
             </div>
 
             <div>
@@ -484,56 +495,59 @@ function Alerts() {
                 className={`alert-card ${
                   alert.acknowledged ? "alert-card-acknowledged" : ""
                 }`}
-                role="button"
-                tabIndex={0}
-                onClick={() => handleSelectAlert(alert)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    handleSelectAlert(alert);
-                  }
-                }}
               >
-                <div className="alert-card-main">
-                  <div className="alert-card-heading">
-                    <span className="alert-id">ALERT #{alert.id}</span>
+                <button
+                  type="button"
+                  className="alert-card-open"
+                  onClick={() => handleSelectAlert(alert)}
+                  aria-label={`Open alert ${alert.id}: ${alert.message}`}
+                >
+                  <div className="alert-card-main">
+                    <div className="alert-card-heading">
+                      <span className="alert-id">ALERT #{alert.id}</span>
 
-                    <span
-                      className={`alert-severity ${getSeverityClass(
-                        alert.severity,
-                      )}`}
-                    >
-                      {formatSeverity(alert.severity)}
-                    </span>
+                      <span
+                        className={`alert-severity ${getSeverityClass(
+                          alert.severity,
+                        )}`}
+                      >
+                        {formatSeverity(alert.severity)}
+                      </span>
 
-                    <span className="alert-status">
-                      {alert.acknowledged ? "Acknowledged" : "Unacknowledged"}
-                    </span>
+                      <span className="alert-status">
+                        {alert.acknowledged ? "Acknowledged" : "Unacknowledged"}
+                      </span>
+                    </div>
+
+                    <h2>{alert.message}</h2>
+
+                    <div className="alert-metadata">
+                      <span className="alert-device-meta">
+                        Device #{alert.deviceId}
+                        <span className="alert-device-name">
+                          {alert.device?.name || "Unknown device"}
+                        </span>
+                      </span>
+
+                      <span>
+                        {alert.predictionId
+                          ? `Prediction #${alert.predictionId}`
+                          : "No prediction"}
+                      </span>
+
+                      <span className="alert-inline-time">
+                        <Clock3 size={13} aria-hidden="true" />
+                        {formatDate(alert.createdAt)}
+                      </span>
+                    </div>
                   </div>
-
-                  <h2>{alert.message}</h2>
-
-                  <div className="alert-metadata">
-                    <span>Device #{alert.deviceId}</span>
-
-                    <span>
-                      {alert.predictionId
-                        ? `Prediction #${alert.predictionId}`
-                        : "No prediction"}
-                    </span>
-
-                    <span>{formatDate(alert.createdAt)}</span>
-                  </div>
-                </div>
+                </button>
 
                 {!alert.acknowledged && (
                   <button
                     type="button"
                     className="alert-card-acknowledge"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleAcknowledge(alert.id);
-                    }}
+                    onClick={() => handleAcknowledge(alert.id)}
                     disabled={acknowledging}
                   >
                     <Check size={15} aria-hidden="true" />

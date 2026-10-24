@@ -73,6 +73,11 @@ export async function getFaults(
         ...(deviceId !== undefined ? { deviceId } : {}),
         ...(status !== undefined ? { status } : {}),
       },
+      include: {
+        device: {
+          select: { id: true, name: true, type: true },
+        },
+      },
       orderBy: { createdAt: "desc" },
     });
 
@@ -92,6 +97,11 @@ export async function getFaultById(
   try {
     const fault = await prisma.fault.findUnique({
       where: { id: faultId },
+      include: {
+        device: {
+          select: { id: true, name: true, type: true },
+        },
+      },
     });
 
     if (!fault) {

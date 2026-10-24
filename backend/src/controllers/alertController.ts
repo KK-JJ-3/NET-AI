@@ -21,6 +21,15 @@ export async function getAlerts(
       orderBy: {
         createdAt: "desc",
       },
+      include: {
+        device: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+          },
+        },
+      },
     });
 
     return sendSuccess(res, alerts);
