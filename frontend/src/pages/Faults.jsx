@@ -214,8 +214,9 @@ function FaultDetails({ fault, onBack }) {
 }
 
 function Faults() {
-  const realtimeRevision = useMonitoringUpdates();
+  const { revision: realtimeRevision } = useMonitoringUpdates();
   const [faults, setFaults] = useState([]);
+  const [allFaults, setAllFaults] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
 
   const [selectedFaultId, setSelectedFaultId] = useState(null);
@@ -241,14 +242,22 @@ function Faults() {
           setError("");
         }
 
-        const data =
+        const [data, summaryData] = await Promise.all([
           activeFilter === "all"
-            ? await getFaults()
-            : await getFaults({
-                status: activeFilter,
-              });
+            ? getFaults()
+            : getFaults({ status: activeFilter }),
+          activeFilter === "all" ? Promise.resolve(null) : getFaults(),
+        ]);
 
-        setFaults(Array.isArray(data) ? data : []);
+        const nextFaults = Array.isArray(data) ? data : [];
+        setFaults(nextFaults);
+        setAllFaults(
+          activeFilter === "all"
+            ? nextFaults
+            : Array.isArray(summaryData)
+              ? summaryData
+              : [],
+        );
       } catch (err) {
         if (!silent) {
           setError(err.message || "Failed to load faults");
@@ -337,13 +346,13 @@ function Faults() {
   }, [realtimeRevision, selectedFaultId, loadFaultDetails]);
 
   const confirmedCount = useMemo(
-    () => faults.filter((fault) => fault.status === "confirmed").length,
-    [faults],
+    () => allFaults.filter((fault) => fault.status === "confirmed").length,
+    [allFaults],
   );
 
   const activeCount = useMemo(
-    () => faults.filter((fault) => fault.status !== "resolved").length,
-    [faults],
+    () => allFaults.filter((fault) => fault.status !== "resolved").length,
+    [allFaults],
   );
 
   if (selectedFaultId) {

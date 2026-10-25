@@ -237,8 +237,9 @@ function AlertDetails({ alert, onBack, onAcknowledge, acknowledging }) {
 }
 
 function Alerts() {
-  const realtimeRevision = useMonitoringUpdates();
+  const { revision: realtimeRevision } = useMonitoringUpdates();
   const [alerts, setAlerts] = useState([]);
+  const [allAlerts, setAllAlerts] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
 
   const [loading, setLoading] = useState(true);
@@ -273,10 +274,20 @@ function Alerts() {
           filters.acknowledged = false;
         }
 
-        const result = await getAlerts(filters);
+        const [result, summaryResult] = await Promise.all([
+          getAlerts(filters),
+          activeFilter === "all" ? Promise.resolve(null) : getAlerts(),
+        ]);
         const nextAlerts = Array.isArray(result) ? result : [];
+        const nextAllAlerts =
+          activeFilter === "all"
+            ? nextAlerts
+            : Array.isArray(summaryResult)
+              ? summaryResult
+              : [];
 
         setAlerts(nextAlerts);
+        setAllAlerts(nextAllAlerts);
         setSelectedAlert((current) => {
           if (!current) return current;
           return nextAlerts.find((alert) => alert.id === current.id) ?? current;
@@ -323,6 +334,12 @@ function Alerts() {
       setError("");
 
       await acknowledgeAlert(id);
+
+      setAllAlerts((currentAlerts) =>
+        currentAlerts.map((alert) =>
+          alert.id === id ? { ...alert, acknowledged: true } : alert,
+        ),
+      );
 
       setAlerts((currentAlerts) =>
         currentAlerts.map((alert) =>
@@ -374,11 +391,13 @@ function Alerts() {
     );
   }
 
-  const totalAlerts = alerts.length;
+  const totalAlerts = allAlerts.length;
 
-  const acknowledgedCount = alerts.filter((alert) => alert.acknowledged).length;
+  const acknowledgedCount = allAlerts.filter(
+    (alert) => alert.acknowledged,
+  ).length;
 
-  const unacknowledgedCount = alerts.filter(
+  const unacknowledgedCount = allAlerts.filter(
     (alert) => !alert.acknowledged,
   ).length;
 

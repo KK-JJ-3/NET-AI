@@ -99,7 +99,7 @@ function getRiskPercentage(riskScore) {
 }
 
 function Predictions() {
-  const realtimeRevision = useMonitoringUpdates();
+  const { revision: realtimeRevision } = useMonitoringUpdates();
   const [predictions, setPredictions] = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
 

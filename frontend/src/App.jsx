@@ -19,7 +19,7 @@ import Topology from "./pages/Topology";
 function App() {
   const { isAuthenticated } = useAuth();
 
-  const [activePage, setActivePage] = useState("devices");
+  const [activePage, setActivePage] = useState("dashboard");
 
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
 
