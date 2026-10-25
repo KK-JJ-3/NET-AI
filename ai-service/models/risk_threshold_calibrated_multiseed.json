@@ -1,0 +1,268 @@
+{
+  "task": "calibrated_saved_model_multiseed_threshold_evaluation",
+  "evaluation_only": true,
+  "production_threshold_changed": false,
+  "model_artifacts_saved": false,
+  "classifier": "xgboost_classifier.joblib",
+  "anomaly_model": "isolation_forest.joblib",
+  "calibration_temperature": 1.8063036919933362,
+  "calibration_hash_validated": true,
+  "calibration_seed": 43,
+  "test_seeds": [
+    44,
+    45,
+    46
+  ],
+  "episode_grouped_splits": true,
+  "forecast_horizon_minutes": 20,
+  "window_size": 15,
+  "thresholds": [
+    0.4,
+    0.45,
+    0.5,
+    0.55,
+    0.6
+  ],
+  "total_test_samples": 19790,
+  "per_seed": {
+    "44": {
+      "test_samples": 6620,
+      "results": [
+        {
+          "threshold": 0.4,
+          "accuracy_percent": 96.12,
+          "macro_f1_percent": 95.06,
+          "normal_samples": 4372,
+          "normal_false_positives": 125,
+          "normal_false_positive_rate_percent": 2.86,
+          "future_fault_samples": 2248,
+          "missed_future_faults": 117,
+          "future_fault_miss_rate_percent": 5.2
+        },
+        {
+          "threshold": 0.45,
+          "accuracy_percent": 96.12,
+          "macro_f1_percent": 95.06,
+          "normal_samples": 4372,
+          "normal_false_positives": 125,
+          "normal_false_positive_rate_percent": 2.86,
+          "future_fault_samples": 2248,
+          "missed_future_faults": 117,
+          "future_fault_miss_rate_percent": 5.2
+        },
+        {
+          "threshold": 0.5,
+          "accuracy_percent": 96.12,
+          "macro_f1_percent": 95.06,
+          "normal_samples": 4372,
+          "normal_false_positives": 125,
+          "normal_false_positive_rate_percent": 2.86,
+          "future_fault_samples": 2248,
+          "missed_future_faults": 117,
+          "future_fault_miss_rate_percent": 5.2
+        },
+        {
+          "threshold": 0.55,
+          "accuracy_percent": 96.1,
+          "macro_f1_percent": 95.03,
+          "normal_samples": 4372,
+          "normal_false_positives": 114,
+          "normal_false_positive_rate_percent": 2.61,
+          "future_fault_samples": 2248,
+          "missed_future_faults": 130,
+          "future_fault_miss_rate_percent": 5.78
+        },
+        {
+          "threshold": 0.6,
+          "accuracy_percent": 96.0,
+          "macro_f1_percent": 94.85,
+          "normal_samples": 4372,
+          "normal_false_positives": 100,
+          "normal_false_positive_rate_percent": 2.29,
+          "future_fault_samples": 2248,
+          "missed_future_faults": 151,
+          "future_fault_miss_rate_percent": 6.72
+        }
+      ]
+    },
+    "45": {
+      "test_samples": 6576,
+      "results": [
+        {
+          "threshold": 0.4,
+          "accuracy_percent": 95.41,
+          "macro_f1_percent": 94.54,
+          "normal_samples": 4279,
+          "normal_false_positives": 178,
+          "normal_false_positive_rate_percent": 4.16,
+          "future_fault_samples": 2297,
+          "missed_future_faults": 109,
+          "future_fault_miss_rate_percent": 4.75
+        },
+        {
+          "threshold": 0.45,
+          "accuracy_percent": 95.41,
+          "macro_f1_percent": 94.54,
+          "normal_samples": 4279,
+          "normal_false_positives": 178,
+          "normal_false_positive_rate_percent": 4.16,
+          "future_fault_samples": 2297,
+          "missed_future_faults": 109,
+          "future_fault_miss_rate_percent": 4.75
+        },
+        {
+          "threshold": 0.5,
+          "accuracy_percent": 95.41,
+          "macro_f1_percent": 94.54,
+          "normal_samples": 4279,
+          "normal_false_positives": 178,
+          "normal_false_positive_rate_percent": 4.16,
+          "future_fault_samples": 2297,
+          "missed_future_faults": 109,
+          "future_fault_miss_rate_percent": 4.75
+        },
+        {
+          "threshold": 0.55,
+          "accuracy_percent": 95.42,
+          "macro_f1_percent": 94.55,
+          "normal_samples": 4279,
+          "normal_false_positives": 166,
+          "normal_false_positive_rate_percent": 3.88,
+          "future_fault_samples": 2297,
+          "missed_future_faults": 121,
+          "future_fault_miss_rate_percent": 5.27
+        },
+        {
+          "threshold": 0.6,
+          "accuracy_percent": 95.35,
+          "macro_f1_percent": 94.44,
+          "normal_samples": 4279,
+          "normal_false_positives": 158,
+          "normal_false_positive_rate_percent": 3.69,
+          "future_fault_samples": 2297,
+          "missed_future_faults": 135,
+          "future_fault_miss_rate_percent": 5.88
+        }
+      ]
+    },
+    "46": {
+      "test_samples": 6594,
+      "results": [
+        {
+          "threshold": 0.4,
+          "accuracy_percent": 95.36,
+          "macro_f1_percent": 94.47,
+          "normal_samples": 4388,
+          "normal_false_positives": 154,
+          "normal_false_positive_rate_percent": 3.51,
+          "future_fault_samples": 2206,
+          "missed_future_faults": 143,
+          "future_fault_miss_rate_percent": 6.48
+        },
+        {
+          "threshold": 0.45,
+          "accuracy_percent": 95.36,
+          "macro_f1_percent": 94.47,
+          "normal_samples": 4388,
+          "normal_false_positives": 154,
+          "normal_false_positive_rate_percent": 3.51,
+          "future_fault_samples": 2206,
+          "missed_future_faults": 143,
+          "future_fault_miss_rate_percent": 6.48
+        },
+        {
+          "threshold": 0.5,
+          "accuracy_percent": 95.36,
+          "macro_f1_percent": 94.47,
+          "normal_samples": 4388,
+          "normal_false_positives": 154,
+          "normal_false_positive_rate_percent": 3.51,
+          "future_fault_samples": 2206,
+          "missed_future_faults": 143,
+          "future_fault_miss_rate_percent": 6.48
+        },
+        {
+          "threshold": 0.55,
+          "accuracy_percent": 95.19,
+          "macro_f1_percent": 94.24,
+          "normal_samples": 4388,
+          "normal_false_positives": 145,
+          "normal_false_positive_rate_percent": 3.3,
+          "future_fault_samples": 2206,
+          "missed_future_faults": 163,
+          "future_fault_miss_rate_percent": 7.39
+        },
+        {
+          "threshold": 0.6,
+          "accuracy_percent": 95.04,
+          "macro_f1_percent": 94.0,
+          "normal_samples": 4388,
+          "normal_false_positives": 129,
+          "normal_false_positive_rate_percent": 2.94,
+          "future_fault_samples": 2206,
+          "missed_future_faults": 189,
+          "future_fault_miss_rate_percent": 8.57
+        }
+      ]
+    }
+  },
+  "aggregate_results": [
+    {
+      "threshold": 0.4,
+      "accuracy_percent": 95.63,
+      "macro_f1_percent": 94.68,
+      "normal_samples": 13039,
+      "normal_false_positives": 457,
+      "normal_false_positive_rate_percent": 3.5,
+      "future_fault_samples": 6751,
+      "missed_future_faults": 369,
+      "future_fault_miss_rate_percent": 5.47
+    },
+    {
+      "threshold": 0.45,
+      "accuracy_percent": 95.63,
+      "macro_f1_percent": 94.68,
+      "normal_samples": 13039,
+      "normal_false_positives": 457,
+      "normal_false_positive_rate_percent": 3.5,
+      "future_fault_samples": 6751,
+      "missed_future_faults": 369,
+      "future_fault_miss_rate_percent": 5.47
+    },
+    {
+      "threshold": 0.5,
+      "accuracy_percent": 95.63,
+      "macro_f1_percent": 94.68,
+      "normal_samples": 13039,
+      "normal_false_positives": 457,
+      "normal_false_positive_rate_percent": 3.5,
+      "future_fault_samples": 6751,
+      "missed_future_faults": 369,
+      "future_fault_miss_rate_percent": 5.47
+    },
+    {
+      "threshold": 0.55,
+      "accuracy_percent": 95.57,
+      "macro_f1_percent": 94.59,
+      "normal_samples": 13039,
+      "normal_false_positives": 425,
+      "normal_false_positive_rate_percent": 3.26,
+      "future_fault_samples": 6751,
+      "missed_future_faults": 414,
+      "future_fault_miss_rate_percent": 6.13
+    },
+    {
+      "threshold": 0.6,
+      "accuracy_percent": 95.46,
+      "macro_f1_percent": 94.42,
+      "normal_samples": 13039,
+      "normal_false_positives": 387,
+      "normal_false_positive_rate_percent": 2.97,
+      "future_fault_samples": 6751,
+      "missed_future_faults": 475,
+      "future_fault_miss_rate_percent": 7.04
+    }
+  ],
+  "decision_rule": "risk=1-P(normal); risk<threshold => normal; otherwise highest-probability fault class",
+  "synthetic_data_warning": "Generated simulator episodes do not establish real-network performance."
+}

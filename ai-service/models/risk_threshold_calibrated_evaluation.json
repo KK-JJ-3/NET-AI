@@ -1,0 +1,72 @@
+{
+  "task": "calibrated_production_model_threshold_evaluation",
+  "evaluation_only": true,
+  "production_threshold_changed": false,
+  "model_artifacts_saved": false,
+  "classifier": "xgboost_classifier.joblib",
+  "calibration_temperature": 1.8063036919933362,
+  "calibration_hash_validated": true,
+  "random_seed": 42,
+  "forecast_horizon_minutes": 20,
+  "window_size": 15,
+  "test_samples": 6880,
+  "decision_rule": "risk=1-P(normal); risk<threshold => normal; otherwise highest-probability fault class",
+  "thresholds": [
+    {
+      "threshold": 0.4,
+      "accuracy_percent": 95.74,
+      "macro_f1_percent": 94.38,
+      "normal_samples": 4904,
+      "normal_false_positives": 193,
+      "normal_false_positive_rate_percent": 3.94,
+      "future_fault_samples": 1976,
+      "missed_future_faults": 87,
+      "future_fault_miss_rate_percent": 4.4
+    },
+    {
+      "threshold": 0.45,
+      "accuracy_percent": 95.74,
+      "macro_f1_percent": 94.38,
+      "normal_samples": 4904,
+      "normal_false_positives": 193,
+      "normal_false_positive_rate_percent": 3.94,
+      "future_fault_samples": 1976,
+      "missed_future_faults": 87,
+      "future_fault_miss_rate_percent": 4.4
+    },
+    {
+      "threshold": 0.5,
+      "accuracy_percent": 95.74,
+      "macro_f1_percent": 94.38,
+      "normal_samples": 4904,
+      "normal_false_positives": 193,
+      "normal_false_positive_rate_percent": 3.94,
+      "future_fault_samples": 1976,
+      "missed_future_faults": 87,
+      "future_fault_miss_rate_percent": 4.4
+    },
+    {
+      "threshold": 0.55,
+      "accuracy_percent": 95.78,
+      "macro_f1_percent": 94.42,
+      "normal_samples": 4904,
+      "normal_false_positives": 185,
+      "normal_false_positive_rate_percent": 3.77,
+      "future_fault_samples": 1976,
+      "missed_future_faults": 92,
+      "future_fault_miss_rate_percent": 4.66
+    },
+    {
+      "threshold": 0.6,
+      "accuracy_percent": 95.92,
+      "macro_f1_percent": 94.55,
+      "normal_samples": 4904,
+      "normal_false_positives": 168,
+      "normal_false_positive_rate_percent": 3.43,
+      "future_fault_samples": 1976,
+      "missed_future_faults": 100,
+      "future_fault_miss_rate_percent": 5.06
+    }
+  ],
+  "synthetic_data_warning": "Generated simulator episodes do not establish real-network performance."
+}

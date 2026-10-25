@@ -21,7 +21,7 @@ NET-AI/
 - Simulate normal traffic, congestion and device-failure scenarios.
 - Evaluate forecasts and active detections separately.
 
-> **Telemetry interval:** the AI feature pipeline assumes readings are approximately **60 seconds apart**. Use the simulator's default `--interval 60` unless you have deliberately changed and tested the feature pipeline. The AI service validates reading intervals and rejects unsuitable windows.
+> **Telemetry interval:** The AI feature pipeline expects at least **15 telemetry readings**, with consecutive readings approximately **60 seconds apart**. The AI service allows a tolerance of **plus or minus 5 seconds** (55 to 65 seconds per interval). Use the simulator's default `--interval 60`. Windows with irregular intervals, missing required metric values, or non-finite metric values are rejected.
 
 ## Requirements
 
@@ -242,14 +242,16 @@ Start each service in its own terminal:
 4. Start the frontend from `frontend/` with `npm run dev`.
 5. Sign in to the dashboard, then run a simulator scenario using a valid account and device ID.
 
-The backend can save telemetry even if the AI service is temporarily unavailable, but prediction generation requires the AI service to be reachable.
+The backend persists incoming telemetry before attempting AI scoring. Prediction scoring normally runs when a device reaches 15 stored telemetry readings and then every 5 additional readings. A new reading reporting an outage can also trigger scoring immediately once the device has at least 15 readings.
+
+If AI scoring fails?for example, because the AI service is unavailable or rejects an unsuitable telemetry window?the backend logs the scoring error but preserves the saved telemetry. The ingestion request still returns HTTP `201 Created`, with the saved telemetry and `prediction: null` when no prediction was generated. A successful ingestion response therefore does not guarantee that a prediction was created.
 
 ## Troubleshooting
 
 - **Backend health check fails:** verify MySQL is running, the database exists, and `.env` has matching `DB_*` and `DATABASE_URL` values.
 - **Prisma cannot connect:** check the database host/port and password, then rerun `npx prisma migrate deploy` from `backend/`.
 - **AI service fails at startup:** confirm the virtual environment dependencies are installed and the model artifacts exist in `ai-service/models/`.
-- **`/predict` returns HTTP 422:** inspect the request window. It must contain the required telemetry values and readings spaced approximately one minute apart.
+- **`/predict` returns HTTP 422:** Check that the request contains at least 15 readings, that consecutive timestamps are 55?65 seconds apart, and that all required telemetry metrics are present and finite. Check for duplicate timestamps, missing metric values, or an incorrect sampling interval. If telemetry was submitted through the backend, remember that it may already be stored even when AI scoring fails; inspect the backend logs and stored telemetry before retrying.
 - **Simulator login fails:** set `NETFAULT_USERNAME` and `NETFAULT_PASSWORD` in the same terminal where you run the simulator, and use valid application credentials.
 - **No charts or predictions appear:** make sure the simulator is targeting a real device ID, the AI service is healthy, and enough telemetry has been submitted. Check the backend and AI-service terminal logs. The simulator now queries the device's latest timestamp before a run; if that lookup fails, check backend availability and authentication.
 - **Frontend cannot reach the API:** confirm the backend is running on port 5000 and that the frontend API base URL matches it.
