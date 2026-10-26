@@ -122,6 +122,15 @@ async function main() {
   const forecastOutcomes = outcomes.filter(
     (row) => !row.prediction.explanationText.includes(ACTIVE_DETECTION_TAG),
   );
+  const forecastPredictions = predictions.filter(
+    (prediction) => !prediction.explanationText.includes(ACTIVE_DETECTION_TAG),
+  );
+  const predictionsWithForecastOutcomes = new Set(
+    forecastOutcomes.map((row) => row.prediction.id),
+  );
+  const forecastsWithoutOutcome = forecastPredictions.filter(
+    (prediction) => !predictionsWithForecastOutcomes.has(prediction.id),
+  );
   const forecastTp = forecastOutcomes.filter(
     (row) => row.outcome === "confirmed",
   ).length;
@@ -197,7 +206,9 @@ async function main() {
       note: "Simulator-generated records are synthetic. Results are not a production reliability estimate.",
       actualFaultRecords: faults.length,
       storedPredictions: predictions.length,
+      forecastPredictions: forecastPredictions.length,
       evaluatedForecasts: forecastOutcomes.length,
+      forecastsWithoutOutcome: forecastsWithoutOutcome.length,
       activeDetectionPredictions: detections.length,
     },
     forecasts: {
@@ -236,7 +247,10 @@ async function main() {
   console.log("\n=== NetFault AI Evaluation (synthetic/current DB data) ===");
   console.log(`Evaluated at: ${evaluatedAt}`);
   console.log(
-    `Faults: ${faults.length} | Predictions: ${predictions.length} | Evaluated forecasts: ${forecastOutcomes.length}`,
+    `Faults: ${faults.length} | Total predictions: ${predictions.length}`,
+  );
+  console.log(
+    `Forecast predictions: ${forecastPredictions.length} | Evaluated forecast outcomes: ${forecastOutcomes.length} | Forecasts without outcomes: ${forecastsWithoutOutcome.length} | Active detections (excluded from forecast metrics): ${detections.length}`,
   );
   console.log("\nFORECASTS");
   console.log(
