@@ -278,6 +278,32 @@ def resolve_actual_fault(
     return response_payload(response)
 
 
+def resolve_open_fault_on_exit(
+    session: requests.Session,
+    base_url: str,
+    fault_id: int | None,
+    fault_resolved: bool,
+    last_sent_sample: TelemetrySample | None,
+    fault_onset_sample: TelemetrySample | None,
+) -> bool:
+    """Resolve a recorded fault when a simulator run exits early.
+
+    Prefer the timestamp of the last telemetry sample successfully submitted.
+    If telemetry submission failed immediately after recording the fault, fall
+    back to the onset sample timestamp so the recorded fault does not remain
+    open indefinitely.
+    """
+    if fault_id is None or fault_resolved:
+        return fault_resolved
+
+    resolution_sample = last_sent_sample or fault_onset_sample
+    if resolution_sample is None:
+        return False
+
+    resolve_actual_fault(session, base_url, fault_id, resolution_sample)
+    return True
+
+
 def extract_fault_id(payload: dict[str, Any]) -> int:
     data = payload.get("data", payload)
     fault_id = data.get("id") if isinstance(data, dict) else None
@@ -340,6 +366,8 @@ def run(args: argparse.Namespace) -> None:
 
     fault_id: int | None = None
     fault_resolved = False
+    fault_onset_sample: TelemetrySample | None = None
+    last_sent_sample: TelemetrySample | None = None
     sent_count = 0
     interrupted = False
 
@@ -412,6 +440,7 @@ def run(args: argparse.Namespace) -> None:
                         sample,
                     )
                     fault_id = extract_fault_id(created)
+                    fault_onset_sample = sample
                     print(
                         f"    Fault #{fault_id} recorded at "
                         f"{sample.recorded_at.isoformat()}."
@@ -442,6 +471,7 @@ def run(args: argparse.Namespace) -> None:
                     sample,
                 )
                 sent_count += 1
+                last_sent_sample = sample
 
                 print(
                     f"[{index + 1}/{len(samples)}] "
@@ -461,6 +491,38 @@ def run(args: argparse.Namespace) -> None:
             print("\nSimulation interrupted.")
 
         finally:
+            if fault_id is not None and not fault_resolved:
+                try:
+                    fault_resolved = resolve_open_fault_on_exit(
+                        session,
+                        args.base_url,
+                        fault_id,
+                        fault_resolved,
+                        last_sent_sample,
+                        fault_onset_sample,
+                    )
+                    if fault_resolved:
+                        resolution_sample = last_sent_sample or fault_onset_sample
+                        assert resolution_sample is not None
+                        print(
+                            f"\n    Fault #{fault_id} automatically resolved "
+                            f"during simulator cleanup at "
+                            f"{resolution_sample.recorded_at.isoformat()}."
+                        )
+                    else:
+                        print(
+                            f"\nWARNING: Fault #{fault_id} could not be "
+                            "automatically resolved; manual recovery may be needed.",
+                            file=sys.stderr,
+                        )
+                except (requests.RequestException, RuntimeError, ValueError) as error:
+                    print(
+                        f"\nWARNING: Failed to resolve fault #{fault_id} "
+                        f"during simulator cleanup: {error}. Manual recovery "
+                        "may be needed.",
+                        file=sys.stderr,
+                    )
+
             print("\n--- Simulator summary ---")
             print(f"Telemetry submitted: {sent_count}/{len(samples)}")
             print(f"Fault recorded: {'yes' if fault_id is not None else 'no'}")
